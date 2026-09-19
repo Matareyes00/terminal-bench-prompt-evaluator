@@ -412,3 +412,166 @@ td .snippet {
 a {
   color: var(--accent);
 }
+
+/* ------------------------------------------------------------- banner copy */
+
+.banner p {
+  margin: 0 0 10px;
+}
+
+.banner p:last-child {
+  margin-bottom: 0;
+}
+
+.banner-foot {
+  padding-top: 9px;
+  border-top: 1px solid var(--line);
+  color: var(--ink-faint);
+}
+
+/* ------------------------------------------------------------------ probes */
+
+.probe-section {
+  margin-top: 38px;
+  padding-top: 26px;
+  border-top: 1px solid var(--line);
+}
+
+.probe-section > h3 {
+  margin: 0 0 6px;
+  font-size: 1.05rem;
+}
+
+.probe-section > .blurb {
+  margin: 0 0 16px;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
+
+.probe-section code {
+  font-size: 0.85em;
+  background: var(--info-bg);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.dial {
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--ink-faint);
+  border-radius: var(--radius);
+  background: var(--panel);
+  padding: 20px 22px;
+}
+
+.dial.raise {
+  border-left-color: var(--warn);
+  background: var(--warn-bg);
+}
+.dial.specify {
+  border-left-color: var(--todo);
+  background: var(--todo-bg);
+}
+.dial.ok {
+  border-left-color: var(--accent);
+}
+.dial.unsure {
+  border-left-color: var(--ink-faint);
+}
+
+.dial h2 {
+  margin: 0;
+  font-size: 1.6rem;
+  letter-spacing: -0.02em;
+}
+
+.dial.raise h2 {
+  color: var(--warn);
+}
+.dial.specify h2 {
+  color: var(--todo);
+}
+.dial.ok h2 {
+  color: var(--accent);
+}
+
+.dial .because {
+  margin: 10px 0 0;
+  color: var(--ink-soft);
+  font-size: 0.93rem;
+}
+
+.dial .action {
+  margin: 12px 0 0;
+  font-size: 0.93rem;
+}
+
+.dial .criteria {
+  margin: 12px 0 0;
+  font-size: 0.78rem;
+  color: var(--ink-faint);
+}
+
+.dial .criteria code {
+  background: none;
+  padding: 0;
+}
+
+.workings {
+  margin-top: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  padding: 12px 16px;
+}
+
+.workings > summary {
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+.answer {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.answer .who {
+  margin: 0 0 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.82rem;
+  color: var(--ink);
+}
+
+.answer .tag {
+  margin-left: 8px;
+  font-family: inherit;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-faint);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 1px 8px;
+}
+
+.answer .tag.warn-tag {
+  color: var(--warn);
+  border-color: var(--warn);
+}
+
+.answer .kv {
+  margin: 4px 0 0;
+  font-size: 0.86rem;
+  color: var(--ink-soft);
+}
+
+.answer .kv b {
+  display: inline-block;
+  min-width: 56px;
+  color: var(--ink-faint);
+  font-weight: 600;
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}

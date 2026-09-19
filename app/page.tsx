@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { Finding, Severity } from "../src/lib/checks/types.ts";
 import type { Evaluation } from "../src/lib/evaluate.ts";
+import type { ProbeReport, Direction } from "../src/lib/dial.ts";
 
 type Result = Evaluation & { storage: { configured: boolean; stored: boolean } };
 
@@ -13,7 +14,7 @@ const SEV: Record<Severity, { heading: string; blurb: string }> = {
   },
   warn: {
     heading: "Risk",
-    blurb: "A real risk that depends on context G0 cannot see. Your call.",
+    blurb: "A real risk that depends on context the checks cannot see. Your call.",
   },
   todo: {
     heading: "Pending packaging",
@@ -25,6 +26,13 @@ const SEV: Record<Severity, { heading: string; blurb: string }> = {
 
 const ORDER: Severity[] = ["blocker", "warn", "todo", "info"];
 
+const DIAL_TONE: Record<Direction, string> = {
+  raise: "raise",
+  specify: "specify",
+  ok: "ok",
+  needs_human: "unsure",
+};
+
 export default function Page() {
   const [prompt, setPrompt] = useState("");
   const [slug, setSlug] = useState("");
@@ -33,11 +41,17 @@ export default function Page() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<Result | null>(null);
 
+  const [probeBusy, setProbeBusy] = useState(false);
+  const [probeError, setProbeError] = useState<string | null>(null);
+  const [probe, setProbe] = useState<ProbeReport | null>(null);
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
     setError(null);
     setResult(null);
+    setProbe(null);
+    setProbeError(null);
     try {
       const res = await fetch("/api/check", {
         method: "POST",
@@ -49,11 +63,8 @@ export default function Page() {
         }),
       });
       const data = await res.json();
-      if (!res.ok) {
-        setError(typeof data?.error === "string" ? data.error : "The check failed.");
-      } else {
-        setResult(data as Result);
-      }
+      if (!res.ok) setError(typeof data?.error === "string" ? data.error : "The check failed.");
+      else setResult(data as Result);
     } catch {
       setError("Could not reach the check endpoint.");
     } finally {
@@ -61,18 +72,54 @@ export default function Page() {
     }
   }
 
+  async function runProbes() {
+    setProbeBusy(true);
+    setProbeError(null);
+    setProbe(null);
+    try {
+      const res = await fetch("/api/probe", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ prompt }),
+      });
+      const data = await res.json();
+      if (!res.ok)
+        setProbeError(typeof data?.error === "string" ? data.error : "The probes failed.");
+      else setProbe(data as ProbeReport);
+    } catch {
+      setProbeError("Could not reach the probe endpoint. It can take up to a minute.");
+    } finally {
+      setProbeBusy(false);
+    }
+  }
+
   return (
     <div className="wrap">
       <header>
         <h1>G0 — Terminal-Bench 4.0 prompt check</h1>
-        <p>Paste the instruction you are thinking of building.</p>
+        <p>
+          Paste the instruction you are thinking of building. Two things happen, and you
+          choose whether to run the second.
+        </p>
       </header>
 
       <div className="banner">
-        <strong>This does not approve tasks, and it has no difficulty dial yet.</strong>{" "}
-        Only the deterministic layer is running: what a regex can prove from the prose.
-        The probes that decide difficulty, novelty and derivability are not wired up, so
-        nothing here says whether to start.
+        <p>
+          <strong>1. What the review will flag.</strong> 25 checks over the prose —
+          relative paths, step-by-step procedures, undocumented output schemas, slug,
+          canary, trailer. Instant and free. Every finding cites the rubric sentence
+          behind it.
+        </p>
+        <p>
+          <strong>2. Whether it is hard enough.</strong> Three frontier models get the
+          prompt with no code and try to solve it. If they land on the same fix, the task
+          is derivable from the prose and needs to be harder. Takes about a minute and
+          costs money, so you press the button.
+        </p>
+        <p className="banner-foot">
+          This never approves a task. Clearing both still leaves the verifier, the tests
+          and the metadata unchecked.
+        </p>
       </div>
 
       <form onSubmit={submit}>
@@ -119,10 +166,17 @@ export default function Page() {
 
       {error && <p className="error">{error}</p>}
 
-      {result && <Results result={result} />}
+      {result && (
+        <Results
+          result={result}
+          probe={probe}
+          probeBusy={probeBusy}
+          probeError={probeError}
+          onRunProbes={runProbes}
+        />
+      )}
 
       <footer>
-        Layer 1 of {" "}
         <a href="https://github.com/Matareyes00/terminal-bench-prompt-evaluator">
           prompt-evaluator-tbench4
         </a>
@@ -133,8 +187,20 @@ export default function Page() {
   );
 }
 
-function Results({ result }: { result: Result }) {
-  const { counts, coverage, verdict, findings } = result;
+function Results({
+  result,
+  probe,
+  probeBusy,
+  probeError,
+  onRunProbes,
+}: {
+  result: Result;
+  probe: ProbeReport | null;
+  probeBusy: boolean;
+  probeError: string | null;
+  onRunProbes: () => void;
+}) {
+  const { counts, verdict, findings } = result;
   const blocked = verdict === "blockers";
 
   return (
@@ -147,10 +213,9 @@ function Results({ result }: { result: Result }) {
         </h2>
         <p>
           {blocked
-            ? "The deterministic layer found problems the review will flag. Fix these before building."
-            : "The deterministic layer found nothing it can prove wrong."}
+            ? "The review will flag these. Fix them before building."
+            : "Nothing the prose checks can prove wrong."}
         </p>
-
         <div className="tally">
           <span>
             <b>{counts.blocker}</b> blocking
@@ -162,32 +227,6 @@ function Results({ result }: { result: Result }) {
             <b>{counts.todo}</b> pending packaging
           </span>
         </div>
-      </div>
-
-      {/* A clean screen reads as permission unless it is contradicted here. */}
-      <div className="not-approval">
-        <strong>This is not approval.</strong>
-        {blocked ? (
-          <>
-            Fixing these clears the deterministic layer, which decides{" "}
-            <b>
-              {coverage.decided} of the {coverage.decidable} criteria
-            </b>{" "}
-            G0 is meant to decide. It says nothing about whether the task is difficult,
-            novel or agentic — those need the probes, which are not active.
-          </>
-        ) : (
-          <>
-            Zero static findings means the deterministic layer found nothing, and that
-            layer decides{" "}
-            <b>
-              {coverage.decided} of the {coverage.decidable} criteria
-            </b>{" "}
-            G0 is meant to decide — and none of them are difficulty, novelty or
-            derivability. Those need the probes, which are not active. A clean result
-            here is not a green light to build.
-          </>
-        )}
       </div>
 
       {ORDER.map((sev) => {
@@ -203,7 +242,98 @@ function Results({ result }: { result: Result }) {
           </section>
         );
       })}
+
+      <section className="probe-section">
+        <h3>Is it hard enough?</h3>
+        {!probe && (
+          <p className="blurb">
+            The checks above say nothing about difficulty. Three models —{" "}
+            <code>claude-opus-5</code>, <code>gpt-5.6-sol</code> and{" "}
+            <code>gemini-3.1-pro</code> — get this prompt with no repository and try to
+            solve it. If they converge on the same fix, it is derivable from the prose.
+            About a minute.
+          </p>
+        )}
+        {!probe && (
+          <button type="button" onClick={onRunProbes} disabled={probeBusy}>
+            {probeBusy ? "Three models are working…" : "Measure difficulty"}
+          </button>
+        )}
+        {probeError && <p className="error">{probeError}</p>}
+        {probe && <ProbeResult report={probe} />}
+      </section>
     </div>
+  );
+}
+
+function ProbeResult({ report }: { report: ProbeReport }) {
+  const { dial, answers, convergence: conv } = report;
+  return (
+    <>
+      <div className={`dial ${DIAL_TONE[dial.direction]}`}>
+        <h2>{dial.headline}</h2>
+        <p className="because">{dial.because}</p>
+        <p className="action">
+          <b>What to do:</b> {dial.action}
+        </p>
+        <p className="criteria">
+          bears on {dial.criteria.map((c) => <code key={c}>{c}</code>).reduce((a, b) => (
+            <>
+              {a}, {b}
+            </>
+          ))}
+        </p>
+      </div>
+
+      <div className="not-approval">
+        <strong>How much this is worth</strong>
+        {dial.evidence}
+      </div>
+
+      <details className="workings">
+        <summary>
+          What the models actually said ({conv.answered} attempted,{" "}
+          {conv.abstained.length} asked to see the code)
+        </summary>
+        {answers.map((a) => (
+          <div className="answer" key={a.model}>
+            <p className="who">
+              {a.model}
+              {a.needsCode && <span className="tag">asked for the code</span>}
+              {a.recognized && <span className="tag warn-tag">claims recognition</span>}
+            </p>
+            {!a.needsCode && (
+              <>
+                <p className="kv">
+                  <b>place</b> {a.place || "—"}
+                </p>
+                <p className="kv">
+                  <b>change</b> {a.change || "—"}
+                </p>
+              </>
+            )}
+            {a.recognized && (
+              <p className="kv">
+                <b>claim</b> “{a.claim}”
+                {a.namedReference ? ` — ${a.namedReference}` : ""}
+              </p>
+            )}
+          </div>
+        ))}
+        {conv.pairs.map((p, i) => (
+          <div className="answer" key={i}>
+            <p className="who">
+              {p.a.split("/").pop()} vs {p.b.split("/").pop()} → <b>{p.verdict}</b>
+            </p>
+            {p.why.map((w, j) => (
+              <p className="kv" key={j}>
+                {w}
+              </p>
+            ))}
+          </div>
+        ))}
+      </details>
+    </>
   );
 }
 

@@ -113,12 +113,16 @@ export async function convergence(
   const abstained = responses.filter((r) => r.attempt.needs_code).map((r) => r.model);
   const answered = responses.filter((r) => !r.attempt.needs_code);
 
-  const pairs: PairJudgement[] = [];
+  // Pairs are independent, so they judge in parallel. Sequentially this is six
+  // round trips stacked end to end, which pushes a web request past its
+  // timeout for no reason.
+  const todo: Array<[Probe1Response, Probe1Response]> = [];
   for (let i = 0; i < answered.length; i++) {
-    for (let j = i + 1; j < answered.length; j++) {
-      pairs.push(await judgePair(answered[i], answered[j], judges));
-    }
+    for (let j = i + 1; j < answered.length; j++) todo.push([answered[i], answered[j]]);
   }
+  const pairs: PairJudgement[] = await Promise.all(
+    todo.map(([x, y]) => judgePair(x, y, judges)),
+  );
 
   // Largest mutually-converging group, over the models that actually answered.
   const ids = answered.map((r) => r.model);

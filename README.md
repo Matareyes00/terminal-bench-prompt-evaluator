@@ -6,10 +6,16 @@ Paste the instruction you are thinking of building. The tool reads the prose
 and tells you what a reviewer is going to flag, before you spend a day on the
 verifier, the Docker image and the tests.
 
-It does **not** approve tasks, and it does not yet tell you whether a task is
-too easy or too hard. What it does today is catch the mechanical problems that
-made up most of the blocking feedback on the last round — in about a second,
-for free.
+Two things happen, and you choose whether to run the second.
+
+1. **What the review will flag** — 25 checks over the prose. Instant, free.
+2. **Whether it is hard enough** — three frontier models get the prompt with no
+   code and try to solve it. If they land on the same fix, the task is
+   derivable from the prose and needs to be harder. About a minute, costs
+   money, so you press a button for it.
+
+It does **not** approve tasks. Clearing both still leaves the verifier, the
+tests and the metadata unchecked.
 
 ---
 
@@ -52,6 +58,34 @@ The canary and the trailer come back as *pending*, not *blocking*. A draft does
 not have them yet, and painting a draft red teaches people to ignore the tool.
 A trailer that is **present and malformed** does block, because that is a real
 mistake rather than an unfinished step.
+
+### 2. The difficulty reading
+
+Press **Measure difficulty** and the prompt goes to `claude-opus-5`,
+`gpt-5.6-sol` and `gemini-3.1-pro` with no repository attached. None of them is
+asked how hard the task is — models are bad at that. They are asked to solve
+it, and the reading comes from what they did:
+
+| What the three models did | Reading |
+|---|---|
+| Two or more produced the same concrete fix | **Raise the difficulty** — derivable from the prose, or memorised |
+| They all asked to see the code | **Genuinely agentic** — nothing to change on this axis |
+| They each committed to a different fix | **Specify the interface** — the prompt leaves the contract open, which is not the same as being hard |
+| The judges disagreed, or only one committed | **No reading** — shown as such, never averaged into a verdict |
+
+Whether a fix counts as "the same" is judged on **place and semantics
+separately**, by two models from different vendors that have to agree. Same
+file for different reasons does not count as agreement, and identical wording
+does not either.
+
+You can open the workings and read what each model actually answered.
+
+**How much to trust it.** This rule was validated once, against the 7 corpus
+tasks carrying a human `novel` label. Five produced a usable answer and it
+separated all five correctly — but at that size there is roughly a 1-in-10
+chance of that happening by luck, and runs are not perfectly stable: the same
+task can come back `raise` once and `no reading` the next time when the judges
+split. Treat it as a strong hint, not a verdict. The page says so too.
 
 ### What it checks today
 
@@ -107,19 +141,16 @@ Still missing:
 
 | | Status |
 |---|---|
-| Is it too easy / too hard? (the dial) | **not running** |
-| Is it genuinely novel? | not running — needs the probes |
-| Is it genuinely agentic? | not running |
+| Is it too easy / too hard? | running, on the evidence described above |
+| Is it genuinely agentic? | running, same caveat |
+| Is it genuinely novel? | partial — a model claiming recognition is reported, but a claim alone never blocks |
 | Does the difficulty come from the real problem or from clerical detail? | not running |
+| Typos, category and tags, time estimate, the explanation criteria | not running |
 | Verifier, Docker, `task.toml`, artifacts, reward | out of scope — the packaging tool |
 | Do the tests match the instruction? | out of scope until you can paste the tests |
 
-The machinery behind the difficulty questions exists and has been measured
-once, against the 7 tasks that carry a human `novel` label. On the 5 of those 7
-that produced a usable answer it separated them perfectly — encouraging, and
-**not** enough to switch on: at that size the result has a 1-in-10 chance of
-happening at random. It gets wired in when there are more labelled tasks to
-check it against. Details in [SPEC.md](SPEC.md), section 9.4.
+The difficulty reading gets stronger as more labelled tasks arrive to check it
+against; today it rests on five. Details in [SPEC.md](SPEC.md), section 9.4.
 
 ---
 
