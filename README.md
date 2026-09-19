@@ -59,7 +59,7 @@ not have them yet, and painting a draft red teaches people to ignore the tool.
 A trailer that is **present and malformed** does block, because that is a real
 mistake rather than an unfinished step.
 
-### 2. The difficulty reading
+### The difficulty reading
 
 Press **Measure difficulty** and the prompt goes to `claude-opus-5`,
 `gpt-5.6-sol` and `gemini-3.1-pro` with no repository attached. None of them is
@@ -86,6 +86,31 @@ separated all five correctly — but at that size there is roughly a 1-in-10
 chance of that happening by luck, and runs are not perfectly stable: the same
 task can come back `raise` once and `no reading` the next time when the judges
 split. Treat it as a strong hint, not a verdict. The page says so too.
+
+One more caveat worth knowing before quoting the number. Of the corpus tasks
+that carry both a `difficult` and a `novel` label, all five move together —
+`difficult=fail` always with `novel=fail`, `pass` always with `pass`. The two
+are collinear in the only data available, so this measurement cannot say which
+of them the probe is tracking.
+
+### What it still cannot tell you: is it hard *with* the code?
+
+Blind-solve answers "is the fix derivable from your prose". When all three
+models ask to see the code, that is read as *genuinely agentic* — and that
+reading is an assumption, not a measurement. A one-line fix behind a vague
+prompt produces the same answer as a genuinely hard task.
+
+Closing that needs the repository. A probe for it is written and works
+(`src/lib/probes/github.ts`, `src/lib/probes/withcode.ts`,
+`POST /api/probe/code`): give it a public PR URL and it fetches the touched
+files **at the base commit**, mixes them unlabelled with their siblings so
+locating the defect is still part of the job, and scores server-side whether
+each model named a file the PR actually changed.
+
+It is not reachable from the web. Two reasoning models reading a repository run
+past what a request is allowed to last — measured, the connection closes around
+340s — so it has to become a background job first. The field is disabled in the
+UI with that explanation rather than shipping a control that always fails.
 
 ### What it checks today
 
