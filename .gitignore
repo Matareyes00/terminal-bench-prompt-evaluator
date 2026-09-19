@@ -1,10 +1,13 @@
 node_modules/
 .next/
-.vercel/
-.env
-.env.*
-!.env.example
+.vercel
 *.log
 .DS_Store
 next-env.d.ts
 tsconfig.tsbuildinfo
+
+# Secrets. The negation must stay last: the CLI appends a bare `.env*` on
+# `vercel link`, and a later match wins, which would re-ignore the template.
+.env
+.env*
+!.env.example
