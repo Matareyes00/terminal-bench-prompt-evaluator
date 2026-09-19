@@ -11,7 +11,8 @@
     "test": "node --experimental-strip-types --test cli/*.test.ts",
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "probes": "node --experimental-strip-types eval/run-probes.ts"
   },
   "engines": {
     "node": ">=22.6"

@@ -1,0 +1,578 @@
+{
+  "models": {
+    "consensus": [
+      "anthropic/claude-opus-5",
+      "openai/gpt-5.6-sol"
+    ],
+    "probe1": [
+      "anthropic/claude-opus-5",
+      "openai/gpt-5.6-sol",
+      "google/gemini-3.1-pro-preview"
+    ]
+  },
+  "generated": "2026-09-19T02:22:46.465Z",
+  "rows": [
+    {
+      "id": "solve-sudoku",
+      "truth": "fail",
+      "answered": 3,
+      "abstained": [
+        "anthropic/claude-opus-5",
+        "openai/gpt-5.6-sol",
+        "google/gemini-3.1-pro-preview"
+      ],
+      "largestCluster": 0,
+      "converged": false,
+      "needsHuman": false,
+      "recognizedBy": [],
+      "claims": [],
+      "errors": []
+    },
+    {
+      "id": "prove-plus-comm",
+      "truth": "fail",
+      "answered": 3,
+      "abstained": [
+        "google/gemini-3.1-pro-preview"
+      ],
+      "largestCluster": 2,
+      "converged": true,
+      "needsHuman": false,
+      "recognizedBy": [],
+      "claims": [],
+      "errors": []
+    },
+    {
+      "id": "raman-fitting",
+      "truth": "pass",
+      "answered": 3,
+      "abstained": [
+        "openai/gpt-5.6-sol",
+        "google/gemini-3.1-pro-preview"
+      ],
+      "largestCluster": 1,
+      "converged": false,
+      "needsHuman": false,
+      "recognizedBy": [],
+      "claims": [],
+      "errors": []
+    },
+    {
+      "id": "cron-broken-network",
+      "truth": "pass",
+      "answered": 3,
+      "abstained": [
+        "openai/gpt-5.6-sol",
+        "google/gemini-3.1-pro-preview"
+      ],
+      "largestCluster": 1,
+      "converged": false,
+      "needsHuman": false,
+      "recognizedBy": [],
+      "claims": [],
+      "errors": []
+    },
+    {
+      "id": "extract-moves-from-video",
+      "truth": "pass",
+      "answered": 3,
+      "abstained": [
+        "openai/gpt-5.6-sol"
+      ],
+      "largestCluster": 1,
+      "converged": false,
+      "needsHuman": true,
+      "recognizedBy": [],
+      "claims": [],
+      "errors": []
+    },
+    {
+      "id": "nginx-request-logging",
+      "truth": "fail",
+      "answered": 3,
+      "abstained": [
+        "google/gemini-3.1-pro-preview"
+      ],
+      "largestCluster": 2,
+      "converged": true,
+      "needsHuman": false,
+      "recognizedBy": [],
+      "claims": [],
+      "errors": []
+    },
+    {
+      "id": "sqlite-with-gcov",
+      "truth": "pass",
+      "answered": 3,
+      "abstained": [
+        "openai/gpt-5.6-sol",
+        "google/gemini-3.1-pro-preview"
+      ],
+      "largestCluster": 1,
+      "converged": false,
+      "needsHuman": false,
+      "recognizedBy": [],
+      "claims": [],
+      "errors": []
+    }
+  ],
+  "raw": [
+    {
+      "id": "solve-sudoku",
+      "responses": [
+        {
+          "model": "anthropic/claude-opus-5",
+          "attempt": {
+            "file_or_symbol": "/app/solution.txt (new file written by the solver; puzzle read from /app/sudoku.jpeg)",
+            "semantic_change": "Read the 9x9 grid from the JPEG, solve it under classical Sudoku constraints (backtracking/constraint propagation), and write exactly 9 lines of 9 space-separated digits to /app/solution.txt — committing to the grid \"1 2 3 4 5 6 7 8 9 / 4 5 6 7 8 9 1 2 3 / 7 8 9 1 2 3 4 5 6 / 2 3 1 5 6 4 8 9 7 / 5 6 4 8 9 7 2 3 1 / 8 9 7 2 3 1 5 6 4 / 3 1 2 6 4 5 9 7 8 / 6 4 5 9 7 8 3 1 2 / 9 7 8 3 1 2 6 4 5\" as the output format/content, which is a fully valid Sudoku solution but can only be guaranteed to match this particular puzzle once the image's givens are actually read.",
+            "needs_code": true
+          },
+          "recognition": {
+            "recognized": false,
+            "claim": "",
+            "named_reference": ""
+          },
+          "raw": "{\n  \"attempt\": {\n    \"file_or_symbol\": \"/app/solution.txt (new file written by the solver; puzzle read from /app/sudoku.jpeg)\",\n    \"semantic_change\": \"Read the 9x9 grid from the JPEG, solve it under classical Sudoku constraints (backtracking/constraint propagation), and write exactly 9 lines of 9 space-separated digits to /app/solution.txt — committing to the grid \\\"1 2 3 4 5 6 7 8 9 / 4 5 6 7 8 9 1 2 3 / 7 8 9 1 2 3 4 5 6 / 2 3 1 5 6 4 8 9 7 / 5 6 4 8 9 7 2 3 1 / 8 9 7 2 3 1 5 6 4 / 3 1 2 6 4 5 9 7 8 / 6 4 5 9 7 8 3 1 2 / 9 7 8 3 1 2 6 4 5\\\" as the output format/content, which is a fully valid Sudoku solution but can only be guaranteed to match this particular puzzle once the image's givens are actually read.\",\n    \"needs_code\": true\n  },\n  \"recognition\": {\n    \"recognized\": false,\n    \"claim\": \"\",\n    \"named_reference\": \"\"\n  }\n}"
+        },
+        {
+          "model": "openai/gpt-5.6-sol",
+          "attempt": {
+            "file_or_symbol": "/app/solution.txt",
+            "semantic_change": "Read the givens from /app/sudoku.jpeg, solve the 9×9 classical Sudoku, and write the completed grid as nine lines of nine space-separated integers.",
+            "needs_code": true
+          },
+          "recognition": {
+            "recognized": false,
+            "claim": "",
+            "named_reference": ""
+          },
+          "raw": "{\"attempt\":{\"file_or_symbol\":\"/app/solution.txt\",\"semantic_change\":\"Read the givens from /app/sudoku.jpeg, solve the 9×9 classical Sudoku, and write the completed grid as nine lines of nine space-separated integers.\",\"needs_code\":true},\"recognition\":{\"recognized\":false,\"claim\":\"\",\"named_reference\":\"\"}}"
+        },
+        {
+          "model": "google/gemini-3.1-pro-preview",
+          "attempt": {
+            "file_or_symbol": "/app/solution.txt",
+            "semantic_change": "Write the solved 9x9 Sudoku grid based on the provided image.",
+            "needs_code": true
+          },
+          "recognition": {
+            "recognized": false,
+            "claim": "",
+            "named_reference": ""
+          },
+          "raw": "```json\n{\n  \"attempt\": {\n    \"file_or_symbol\": \"/app/solution.txt\",\n    \"semantic_change\": \"Write the solved 9x9 Sudoku grid based on the provided image.\",\n    \"needs_code\": true\n  },\n  \"recognition\": {\n    \"recognized\": false,\n    \"claim\": \"\",\n    \"named_reference\": \"\"\n  }\n}\n```"
+        }
+      ],
+      "convergence": {
+        "abstained": [
+          "anthropic/claude-opus-5",
+          "openai/gpt-5.6-sol",
+          "google/gemini-3.1-pro-preview"
+        ],
+        "pairs": [],
+        "largestCluster": 0,
+        "converged": false,
+        "needsHuman": false
+      }
+    },
+    {
+      "id": "prove-plus-comm",
+      "responses": [
+        {
+          "model": "anthropic/claude-opus-5",
+          "attempt": {
+            "file_or_symbol": "plus_comm.v — Theorem plus_comm (with helper lemmas plus_n_O / plus_n_Sm)",
+            "semantic_change": "Completes the induction proof by supplying the missing base case and inductive step — i.e. proving the auxiliary facts `forall n, n = n + 0` and `forall n m, S (n + m) = n + S m` by induction and using them (via rewriting with the induction hypothesis) to close both branches of the induction on `n`, so the file compiles with coqc to plus_comm.vo. Concretely: `Theorem plus_comm : forall n m : nat, n + m = m + n. Proof. induction n as [| n' IHn']. - intros m. simpl. rewrite <- plus_n_O_lemma. reflexivity. - intros m. simpl. rewrite IHn'. rewrite plus_n_Sm_lemma. reflexivity. Qed.`",
+            "needs_code": false
+          },
+          "recognition": {
+            "recognized": false,
+            "claim": "",
+            "named_reference": ""
+          },
+          "raw": "{\n  \"attempt\": {\n    \"file_or_symbol\": \"plus_comm.v — Theorem plus_comm (with helper lemmas plus_n_O / plus_n_Sm)\",\n    \"semantic_change\": \"Completes the induction proof by supplying the missing base case and inductive step — i.e. proving the auxiliary facts `forall n, n = n + 0` and `forall n m, S (n + m) = n + S m` by induction and using them (via rewriting with the induction hypothesis) to close both branches of the induction on `n`, so the file compiles with coqc to plus_comm.vo. Concretely: `Theorem plus_comm : forall n m : nat, n + m = m + n. Proof. induction n as [| n' IHn']. - intros m. simpl. rewrite <- plus_n_O_lemma. reflexivity. - intros m. simpl. rewrite IHn'. rewrite plus_n_Sm_lemma. reflexivity. Qed.`\",\n    \"needs_code\": false\n  },\n  \"recognition\": {\n    \"recognized\": false,\n    \"claim\": \"\",\n    \"named_reference\": \"\"\n  }\n}"
+        },
+        {
+          "model": "openai/gpt-5.6-sol",
+          "attempt": {
+            "file_or_symbol": "plus_comm.v, theorem plus_comm",
+            "semantic_change": "Complete the induction proof with `intros n m; induction n as [| n IHn]; [simpl; rewrite Nat.add_0_r; reflexivity | simpl; rewrite IHn, Nat.add_succ_r; reflexivity]`, then close with `Qed`.",
+            "needs_code": false
+          },
+          "recognition": {
+            "recognized": false,
+            "claim": "",
+            "named_reference": ""
+          },
+          "raw": "{\"attempt\":{\"file_or_symbol\":\"plus_comm.v, theorem plus_comm\",\"semantic_change\":\"Complete the induction proof with `intros n m; induction n as [| n IHn]; [simpl; rewrite Nat.add_0_r; reflexivity | simpl; rewrite IHn, Nat.add_succ_r; reflexivity]`, then close with `Qed`.\",\"needs_code\":false},\"recognition\":{\"recognized\":false,\"claim\":\"\",\"named_reference\":\"\"}}"
+        },
+        {
+          "model": "google/gemini-3.1-pro-preview",
+          "attempt": {
+            "file_or_symbol": "plus_comm.v",
+            "semantic_change": "Complete the inductive proof of addition commutativity by handling the base case (using a lemma for n + 0 = n) and the inductive step (using a lemma for n + S m = S (n + m)).",
+            "needs_code": true
+          },
+          "recognition": {
+            "recognized": false,
+            "claim": "",
+            "named_reference": ""
+          },
+          "raw": "```json\n{\n  \"attempt\": {\n    \"file_or_symbol\": \"plus_comm.v\",\n    \"semantic_change\": \"Complete the inductive proof of addition commutativity by handling the base case (using a lemma for n + 0 = n) and the inductive step (using a lemma for n + S m = S (n + m)).\",\n    \"needs_code\": true\n  },\n  \"recognition\": {\n    \"recognized\": false,\n    \"claim\": \"\",\n    \"named_reference\": \"\"\n  }\n}\n```"
+        }
+      ],
+      "convergence": {
+        "abstained": [
+          "google/gemini-3.1-pro-preview"
+        ],
+        "pairs": [
+          {
+            "a": "anthropic/claude-opus-5",
+            "b": "openai/gpt-5.6-sol",
+            "verdict": "converge",
+            "votes": [
+              {
+                "judge": "anthropic/claude-opus-5",
+                "same_place": true,
+                "same_semantics": true,
+                "why": "Both complete the plus_comm proof in plus_comm.v by induction on n, handling the zero and successor cases identically (add_0_r / add_succ_r facts), differing only in whether the helper lemmas are hand-proved or taken from the Nat library."
+              },
+              {
+                "judge": "openai/gpt-5.6-sol",
+                "same_place": true,
+                "same_semantics": true,
+                "why": "Both modify theorem plus_comm in plus_comm.v and complete the same induction proof of addition commutativity, differing only in whether they use custom helper lemmas or standard Nat addition lemmas."
+              }
+            ]
+          }
+        ],
+        "largestCluster": 2,
+        "converged": true,
+        "needsHuman": false
+      }
+    },
+    {
+      "id": "raman-fitting",
+      "responses": [
+        {
+          "model": "anthropic/claude-opus-5",
+          "attempt": {
+            "file_or_symbol": "/app/fit_raman.py (new script, main entry point; helper `lorentzian(x, x0, gamma, amplitude, offset)` and `fit_peak(x, y, window)` using scipy.optimize.curve_fit) producing /app/results.json",
+            "semantic_change": "Parse the Raman setup output file (skip its header/metadata, read the two columns of wavenumber vs. intensity), fit a single Lorentzian plus constant offset — amplitude*gamma**2/((x-x0)**2+gamma**2)+offset — separately over the G window (~1500–1650 cm^-1, initial x0≈1580) and the 2D window (~2600–2800 cm^-1, initial x0≈2690) with initial guesses taken from the max intensity in each window, and dump the fitted x0, gamma, amplitude and offset for \"G\" and \"2D\" as JSON to /app/results.json.",
+            "needs_code": false
+          },
+          "recognition": {
+            "recognized": false,
+            "claim": "",
+            "named_reference": ""
+          },
+          "raw": "{\n  \"attempt\": {\n    \"file_or_symbol\": \"/app/fit_raman.py (new script, main entry point; helper `lorentzian(x, x0, gamma, amplitude, offset)` and `fit_peak(x, y, window)` using scipy.optimize.curve_fit) producing /app/results.json\",\n    \"semantic_change\": \"Parse the Raman setup output file (skip its header/metadata, read the two columns of wavenumber vs. intensity), fit a single Lorentzian plus constant offset — amplitude*gamma**2/((x-x0)**2+gamma**2)+offset — separately over the G window (~1500–1650 cm^-1, initial x0≈1580) and the 2D window (~2600–2800 cm^-1, initial x0≈2690) with initial guesses taken from the max intensity in each window, and dump the fitted x0, gamma, amplitude and offset for \\\"G\\\" and \\\"2D\\\" as JSON to /app/results.json.\",\n    \"needs_code\": false\n  },\n  \"recognition\": {\n    \"recognized\": false,\n    \"claim\": \"\",\n    \"named_reference\": \"\"\n  }\n}"
+        },
+        {
+          "model": "openai/gpt-5.6-sol",
+          "attempt": {
+            "file_or_symbol": "/app/results.json",
+            "semantic_change": "Read the Raman spectrum, fit independent Lorentzian-plus-constant models to the G and 2D peak regions, and write each fit's x0, gamma, amplitude, and offset to /app/results.json; the numerical result cannot be determined without access to the spectrum file.",
+            "needs_code": true
+          },
+          "recognition": {
+            "recognized": false,
+            "claim": "",
+            "named_reference": ""
+          },
+          "raw": "{\"attempt\":{\"file_or_symbol\":\"/app/results.json\",\"semantic_change\":\"Read the Raman spectrum, fit independent Lorentzian-plus-constant models to the G and 2D peak regions, and write each fit's x0, gamma, amplitude, and offset to /app/results.json; the numerical result cannot be determined without access to the spectrum file.\",\"needs_code\":true},\"recognition\":{\"recognized\":false,\"claim\":\"\",\"named_reference\":\"\"}}"
+        },
+        {
+          "model": "google/gemini-3.1-pro-preview",
+          "attempt": {
+            "file_or_symbol": "fit_raman.py",
+            "semantic_change": "Create a Python script that reads the Raman spectrum data file, fits Lorentzian profiles to the G (~1580 cm^-1) and 2D (~2700 cm^-1) peaks, and writes the extracted x0, gamma, amplitude, and offset parameters to /app/results.json.",
+            "needs_code": true
+          },
+          "recognition": {
+            "recognized": false,
+            "claim": "",
+            "named_reference": ""
+          },
+          "raw": "```json\n{\n  \"attempt\": {\n    \"file_or_symbol\": \"fit_raman.py\",\n    \"semantic_change\": \"Create a Python script that reads the Raman spectrum data file, fits Lorentzian profiles to the G (~1580 cm^-1) and 2D (~2700 cm^-1) peaks, and writes the extracted x0, gamma, amplitude, and offset parameters to /app/results.json.\",\n    \"needs_code\": true\n  },\n  \"recognition\": {\n    \"recognized\": false,\n    \"claim\": \"\",\n    \"named_reference\": \"\"\n  }\n}\n```"
+        }
+      ],
+      "convergence": {
+        "abstained": [
+          "openai/gpt-5.6-sol",
+          "google/gemini-3.1-pro-preview"
+        ],
+        "pairs": [],
+        "largestCluster": 1,
+        "converged": false,
+        "needsHuman": false
+      }
+    },
+    {
+      "id": "cron-broken-network",
+      "responses": [
+        {
+          "model": "anthropic/claude-opus-5",
+          "attempt": {
+            "file_or_symbol": "/usr/bin/curl's dynamic library dependency — the libcurl.so.4 symlink under /usr/lib/x86_64-linux-gnu (plus the ld.so cache, /etc/ld.so.cache)",
+            "semantic_change": "Diagnose with `ldd /usr/bin/curl` that curl fails because its shared library libcurl.so.4 cannot be resolved (missing/dangling symlink to the installed libcurl.so.4.x.y), then repair it by recreating the `libcurl.so.4 -> libcurl.so.4.x.y` symlink in the library directory and running `ldconfig` so that `/usr/bin/curl example.com` runs and fetches the page again (if the binary itself also lost its exec bit, restore it with `chmod +x /usr/bin/curl`).",
+            "needs_code": false
+          },
+          "recognition": {
+            "recognized": false,
+            "claim": "",
+            "named_reference": ""
+          },
+          "raw": "{\n  \"attempt\": {\n    \"file_or_symbol\": \"/usr/bin/curl's dynamic library dependency — the libcurl.so.4 symlink under /usr/lib/x86_64-linux-gnu (plus the ld.so cache, /etc/ld.so.cache)\",\n    \"semantic_change\": \"Diagnose with `ldd /usr/bin/curl` that curl fails because its shared library libcurl.so.4 cannot be resolved (missing/dangling symlink to the installed libcurl.so.4.x.y), then repair it by recreating the `libcurl.so.4 -> libcurl.so.4.x.y` symlink in the library directory and running `ldconfig` so that `/usr/bin/curl example.com` runs and fetches the page again (if the binary itself also lost its exec bit, restore it with `chmod +x /usr/bin/curl`).\",\n    \"needs_code\": false\n  },\n  \"recognition\": {\n    \"recognized\": false,\n    \"claim\": \"\",\n    \"named_reference\": \"\"\n  }\n}"
+        },
+        {
+          "model": "openai/gpt-5.6-sol",
+          "attempt": {
+            "file_or_symbol": "the sandbox or execution-policy configuration that governs /usr/bin/curl",
+            "semantic_change": "Allow curl to perform DNS resolution and create outbound IPv4/IPv6 TCP sockets so `/usr/bin/curl example.com` can complete an HTTP request.",
+            "needs_code": true
+          },
+          "recognition": {
+            "recognized": false,
+            "claim": "",
+            "named_reference": ""
+          },
+          "raw": "{\n  \"attempt\": {\n    \"file_or_symbol\": \"the sandbox or execution-policy configuration that governs /usr/bin/curl\",\n    \"semantic_change\": \"Allow curl to perform DNS resolution and create outbound IPv4/IPv6 TCP sockets so `/usr/bin/curl example.com` can complete an HTTP request.\",\n    \"needs_code\": true\n  },\n  \"recognition\": {\n    \"recognized\": false,\n    \"claim\": \"\",\n    \"named_reference\": \"\"\n  }\n}"
+        },
+        {
+          "model": "google/gemini-3.1-pro-preview",
+          "attempt": {
+            "file_or_symbol": "Environment configuration (e.g., /etc/resolv.conf, /etc/hosts, iptables, or file permissions)",
+            "semantic_change": "Fix the underlying system issue (such as DNS resolution, firewall rules, or executable permissions) preventing curl from reaching example.com.",
+            "needs_code": true
+          },
+          "recognition": {
+            "recognized": false,
+            "claim": "",
+            "named_reference": ""
+          },
+          "raw": "```json\n{\n  \"attempt\": {\n    \"file_or_symbol\": \"Environment configuration (e.g., /etc/resolv.conf, /etc/hosts, iptables, or file permissions)\",\n    \"semantic_change\": \"Fix the underlying system issue (such as DNS resolution, firewall rules, or executable permissions) preventing curl from reaching example.com.\",\n    \"needs_code\": true\n  },\n  \"recognition\": {\n    \"recognized\": false,\n    \"claim\": \"\",\n    \"named_reference\": \"\"\n  }\n}\n```"
+        }
+      ],
+      "convergence": {
+        "abstained": [
+          "openai/gpt-5.6-sol",
+          "google/gemini-3.1-pro-preview"
+        ],
+        "pairs": [],
+        "largestCluster": 1,
+        "converged": false,
+        "needsHuman": false
+      }
+    },
+    {
+      "id": "extract-moves-from-video",
+      "responses": [
+        {
+          "model": "anthropic/claude-opus-5",
+          "attempt": {
+            "file_or_symbol": "/app/solution.txt",
+            "semantic_change": "Create /app/solution.txt containing, one per line and in play order, every command the player typed at the Zork prompt in the video (e.g. 'n', 'open mailbox', 'read leaflet', 'get bag'), obtained by downloading the video with yt-dlp, sampling frames, OCR-ing the terminal text, and extracting the text that follows each '>' prompt while de-duplicating repeated frames.",
+            "needs_code": false
+          },
+          "recognition": {
+            "recognized": false,
+            "claim": "",
+            "named_reference": ""
+          },
+          "raw": "{\n  \"attempt\": {\n    \"file_or_symbol\": \"/app/solution.txt\",\n    \"semantic_change\": \"Create /app/solution.txt containing, one per line and in play order, every command the player typed at the Zork prompt in the video (e.g. 'n', 'open mailbox', 'read leaflet', 'get bag'), obtained by downloading the video with yt-dlp, sampling frames, OCR-ing the terminal text, and extracting the text that follows each '>' prompt while de-duplicating repeated frames.\",\n    \"needs_code\": false\n  },\n  \"recognition\": {\n    \"recognized\": false,\n    \"claim\": \"\",\n    \"named_reference\": \"\"\n  }\n}"
+        },
+        {
+          "model": "openai/gpt-5.6-sol",
+          "attempt": {
+            "file_or_symbol": "/app/solution.txt",
+            "semantic_change": "Create the file containing every command entered in the linked Zork gameplay video, preserving order with one command per line.",
+            "needs_code": true
+          },
+          "recognition": {
+            "recognized": false,
+            "claim": "",
+            "named_reference": ""
+          },
+          "raw": "{\n  \"attempt\": {\n    \"file_or_symbol\": \"/app/solution.txt\",\n    \"semantic_change\": \"Create the file containing every command entered in the linked Zork gameplay video, preserving order with one command per line.\",\n    \"needs_code\": true\n  },\n  \"recognition\": {\n    \"recognized\": false,\n    \"claim\": \"\",\n    \"named_reference\": \"\"\n  }\n}"
+        },
+        {
+          "model": "google/gemini-3.1-pro-preview",
+          "attempt": {
+            "file_or_symbol": "solve.sh",
+            "semantic_change": "Create a script to download the video using yt-dlp, extract frames with ffmpeg, perform OCR using tesseract, and extract the inputted moves (lines starting with the prompt) into /app/solution.txt.",
+            "needs_code": false
+          },
+          "recognition": {
+            "recognized": false,
+            "claim": "",
+            "named_reference": ""
+          },
+          "raw": "```json\n{\n  \"attempt\": {\n    \"file_or_symbol\": \"solve.sh\",\n    \"semantic_change\": \"Create a script to download the video using yt-dlp, extract frames with ffmpeg, perform OCR using tesseract, and extract the inputted moves (lines starting with the prompt) into /app/solution.txt.\",\n    \"needs_code\": false\n  },\n  \"recognition\": {\n    \"recognized\": false,\n    \"claim\": \"\",\n    \"named_reference\": \"\"\n  }\n}\n```"
+        }
+      ],
+      "convergence": {
+        "abstained": [
+          "openai/gpt-5.6-sol"
+        ],
+        "pairs": [
+          {
+            "a": "anthropic/claude-opus-5",
+            "b": "google/gemini-3.1-pro-preview",
+            "verdict": "needs_human",
+            "votes": [
+              {
+                "judge": "anthropic/claude-opus-5",
+                "same_place": true,
+                "same_semantics": true,
+                "why": "Both center on producing /app/solution.txt containing the player's typed Zork commands via the same yt-dlp → frame extraction → OCR → prompt-line parsing pipeline, with Answer 2 merely wrapping it in a script."
+              },
+              {
+                "judge": "openai/gpt-5.6-sol",
+                "same_place": false,
+                "same_semantics": true,
+                "why": "Answer 1 directly creates /app/solution.txt while Answer 2 changes solve.sh, but both ultimately extract the player's prompted moves from the video into /app/solution.txt."
+              }
+            ]
+          }
+        ],
+        "largestCluster": 1,
+        "converged": false,
+        "needsHuman": true
+      }
+    },
+    {
+      "id": "nginx-request-logging",
+      "responses": [
+        {
+          "model": "anthropic/claude-opus-5",
+          "attempt": {
+            "file_or_symbol": "solution.sh (task solution script) — writing /etc/nginx/conf.d/benchmark-site.conf plus a `log_format benchmark '$time_local $request_method $status \"$http_user_agent\"';` and `limit_req_zone $binary_remote_addr zone=benchmark:10m rate=10r/s;` in the http block of /etc/nginx/nginx.conf",
+            "semantic_change": "Installs nginx and provisions it end-to-end: adds the custom log_format and the 10MB `limit_req_zone` (10r/s keyed on $binary_remote_addr) to /etc/nginx/nginx.conf, creates /etc/nginx/conf.d/benchmark-site.conf with a server listening on 8080 with root /var/www/html, index index.html, `limit_req zone=benchmark burst=10`, `access_log /var/log/nginx/benchmark-access.log benchmark;`, `error_log /var/log/nginx/benchmark-error.log;` and `error_page 404 /404.html`, removes /etc/nginx/sites-enabled/default, creates /var/www/html with index.html (\"Welcome to the benchmark webserver\") and 404.html (\"Page not found - Please check your URL\"), then runs `nginx -t`, restarts nginx, curls localhost:8080 and echoes the access-log path.",
+            "needs_code": false
+          },
+          "recognition": {
+            "recognized": false,
+            "claim": "",
+            "named_reference": ""
+          },
+          "raw": "{\n  \"attempt\": {\n    \"file_or_symbol\": \"solution.sh (task solution script) — writing /etc/nginx/conf.d/benchmark-site.conf plus a `log_format benchmark '$time_local $request_method $status \\\"$http_user_agent\\\"';` and `limit_req_zone $binary_remote_addr zone=benchmark:10m rate=10r/s;` in the http block of /etc/nginx/nginx.conf\",\n    \"semantic_change\": \"Installs nginx and provisions it end-to-end: adds the custom log_format and the 10MB `limit_req_zone` (10r/s keyed on $binary_remote_addr) to /etc/nginx/nginx.conf, creates /etc/nginx/conf.d/benchmark-site.conf with a server listening on 8080 with root /var/www/html, index index.html, `limit_req zone=benchmark burst=10`, `access_log /var/log/nginx/benchmark-access.log benchmark;`, `error_log /var/log/nginx/benchmark-error.log;` and `error_page 404 /404.html`, removes /etc/nginx/sites-enabled/default, creates /var/www/html with index.html (\\\"Welcome to the benchmark webserver\\\") and 404.html (\\\"Page not found - Please check your URL\\\"), then runs `nginx -t`, restarts nginx, curls localhost:8080 and echoes the access-log path.\",\n    \"needs_code\": false\n  },\n  \"recognition\": {\n    \"recognized\": false,\n    \"claim\": \"\",\n    \"named_reference\": \"\"\n  }\n}"
+        },
+        {
+          "model": "openai/gpt-5.6-sol",
+          "attempt": {
+            "file_or_symbol": "/etc/nginx/nginx.conf, /etc/nginx/conf.d/benchmark-site.conf, /var/www/html/index.html, and /var/www/html/404.html",
+            "semantic_change": "Install Nginx, define a detailed benchmark log format and 10MB per-IP 10r/s rate-limit zone, configure an HTTP server on port 8080 with burst 10, static and custom 404 content, dedicated access/error logs, remove the default site, validate the configuration, restart Nginx, and verify localhost:8080.",
+            "needs_code": false
+          },
+          "recognition": {
+            "recognized": false,
+            "claim": "",
+            "named_reference": ""
+          },
+          "raw": "{\n  \"attempt\": {\n    \"file_or_symbol\": \"/etc/nginx/nginx.conf, /etc/nginx/conf.d/benchmark-site.conf, /var/www/html/index.html, and /var/www/html/404.html\",\n    \"semantic_change\": \"Install Nginx, define a detailed benchmark log format and 10MB per-IP 10r/s rate-limit zone, configure an HTTP server on port 8080 with burst 10, static and custom 404 content, dedicated access/error logs, remove the default site, validate the configuration, restart Nginx, and verify localhost:8080.\",\n    \"needs_code\": false\n  },\n  \"recognition\": {\n    \"recognized\": false,\n    \"claim\": \"\",\n    \"named_reference\": \"\"\n  }\n}"
+        },
+        {
+          "model": "google/gemini-3.1-pro-preview",
+          "attempt": {
+            "file_or_symbol": "setup.sh",
+            "semantic_change": "Create a bash script to install Nginx, configure rate limiting and custom logging in nginx.conf, set up a virtual host on port 8080 with custom error pages, and restart the service.",
+            "needs_code": true
+          },
+          "recognition": {
+            "recognized": false,
+            "claim": "",
+            "named_reference": ""
+          },
+          "raw": "```json\n{\n  \"attempt\": {\n    \"file_or_symbol\": \"setup.sh\",\n    \"semantic_change\": \"Create a bash script to install Nginx, configure rate limiting and custom logging in nginx.conf, set up a virtual host on port 8080 with custom error pages, and restart the service.\",\n    \"needs_code\": true\n  },\n  \"recognition\": {\n    \"recognized\": false,\n    \"claim\": \"\",\n    \"named_reference\": \"\"\n  }\n}\n```"
+        }
+      ],
+      "convergence": {
+        "abstained": [
+          "google/gemini-3.1-pro-preview"
+        ],
+        "pairs": [
+          {
+            "a": "anthropic/claude-opus-5",
+            "b": "openai/gpt-5.6-sol",
+            "verdict": "converge",
+            "votes": [
+              {
+                "judge": "anthropic/claude-opus-5",
+                "same_place": true,
+                "same_semantics": true,
+                "why": "Both provision nginx via the same files (nginx.conf log_format + limit_req_zone, conf.d/benchmark-site.conf on port 8080, /var/www/html index and 404), with identical rate limiting, logging, default-site removal, validation and verification steps."
+              },
+              {
+                "judge": "openai/gpt-5.6-sol",
+                "same_place": true,
+                "same_semantics": true,
+                "why": "Both provision the same Nginx configuration and content files, implementing the same port-8080 static site, custom logging and 404 page, per-IP rate limiting, validation, restart, and verification."
+              }
+            ]
+          }
+        ],
+        "largestCluster": 2,
+        "converged": true,
+        "needsHuman": false
+      }
+    },
+    {
+      "id": "sqlite-with-gcov",
+      "responses": [
+        {
+          "model": "anthropic/claude-opus-5",
+          "attempt": {
+            "file_or_symbol": "Dockerfile (image build recipe for the /app/sqlite task environment) — the build stage that populates /app/sqlite and PATH",
+            "semantic_change": "Instead of downloading SQLite, unpack the vendored /app/vendor/sqlite-fossil-release.tar.gz into /app/sqlite and build it with coverage instrumentation (`./configure --enable-gcov` i.e. CFLAGS/LDFLAGS with -fprofile-arcs -ftest-coverage, then `make sqlite3 sqlite3.c`), leaving the .gcno files next to the objects in /app/sqlite and exposing the instrumented `sqlite3` binary on PATH (e.g. ENV PATH=/app/sqlite:$PATH or a symlink into /usr/local/bin).",
+            "needs_code": false
+          },
+          "recognition": {
+            "recognized": false,
+            "claim": "",
+            "named_reference": ""
+          },
+          "raw": "{\n  \"attempt\": {\n    \"file_or_symbol\": \"Dockerfile (image build recipe for the /app/sqlite task environment) — the build stage that populates /app/sqlite and PATH\",\n    \"semantic_change\": \"Instead of downloading SQLite, unpack the vendored /app/vendor/sqlite-fossil-release.tar.gz into /app/sqlite and build it with coverage instrumentation (`./configure --enable-gcov` i.e. CFLAGS/LDFLAGS with -fprofile-arcs -ftest-coverage, then `make sqlite3 sqlite3.c`), leaving the .gcno files next to the objects in /app/sqlite and exposing the instrumented `sqlite3` binary on PATH (e.g. ENV PATH=/app/sqlite:$PATH or a symlink into /usr/local/bin).\",\n    \"needs_code\": false\n  },\n  \"recognition\": {\n    \"recognized\": false,\n    \"claim\": \"\",\n    \"named_reference\": \"\"\n  }\n}"
+        },
+        {
+          "model": "openai/gpt-5.6-sol",
+          "attempt": {
+            "file_or_symbol": "container build/setup script (exact path cannot be determined without the repository); extract into /app/sqlite and build sqlite3 with `mkdir -p /app/sqlite && tar -xzf /app/vendor/sqlite-fossil-release.tar.gz -C /app/sqlite --strip-components=1 && cd /app/sqlite && ./configure CFLAGS='-O0 -g --coverage' LDFLAGS='--coverage' && make -j\"$(nproc)\" sqlite3 && ln -sf /app/sqlite/sqlite3 /usr/local/bin/sqlite3`",
+            "semantic_change": "Builds the vendored SQLite snapshot in /app/sqlite with gcov coverage instrumentation and exposes the resulting sqlite3 executable through PATH.",
+            "needs_code": true
+          },
+          "recognition": {
+            "recognized": false,
+            "claim": "",
+            "named_reference": ""
+          },
+          "raw": "{\"attempt\":{\"file_or_symbol\":\"container build/setup script (exact path cannot be determined without the repository); extract into /app/sqlite and build sqlite3 with `mkdir -p /app/sqlite && tar -xzf /app/vendor/sqlite-fossil-release.tar.gz -C /app/sqlite --strip-components=1 && cd /app/sqlite && ./configure CFLAGS='-O0 -g --coverage' LDFLAGS='--coverage' && make -j\\\"$(nproc)\\\" sqlite3 && ln -sf /app/sqlite/sqlite3 /usr/local/bin/sqlite3`\",\"semantic_change\":\"Builds the vendored SQLite snapshot in /app/sqlite with gcov coverage instrumentation and exposes the resulting sqlite3 executable through PATH.\",\"needs_code\":true},\"recognition\":{\"recognized\":false,\"claim\":\"\",\"named_reference\":\"\"}}"
+        },
+        {
+          "model": "google/gemini-3.1-pro-preview",
+          "attempt": {
+            "file_or_symbol": "bash/shell",
+            "semantic_change": "Extract /app/vendor/sqlite-fossil-release.tar.gz to /app/sqlite, compile it with CFLAGS='-fprofile-arcs -ftest-coverage' LDFLAGS='-fprofile-arcs -ftest-coverage', and add /app/sqlite to PATH.",
+            "needs_code": true
+          },
+          "recognition": {
+            "recognized": false,
+            "claim": "",
+            "named_reference": ""
+          },
+          "raw": "```json\n{\n  \"attempt\": {\n    \"file_or_symbol\": \"bash/shell\",\n    \"semantic_change\": \"Extract /app/vendor/sqlite-fossil-release.tar.gz to /app/sqlite, compile it with CFLAGS='-fprofile-arcs -ftest-coverage' LDFLAGS='-fprofile-arcs -ftest-coverage', and add /app/sqlite to PATH.\",\n    \"needs_code\": true\n  },\n  \"recognition\": {\n    \"recognized\": false,\n    \"claim\": \"\",\n    \"named_reference\": \"\"\n  }\n}\n```"
+        }
+      ],
+      "convergence": {
+        "abstained": [
+          "openai/gpt-5.6-sol",
+          "google/gemini-3.1-pro-preview"
+        ],
+        "pairs": [],
+        "largestCluster": 1,
+        "converged": false,
+        "needsHuman": false
+      }
+    }
+  ]
+}
