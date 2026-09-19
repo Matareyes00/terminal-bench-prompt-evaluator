@@ -391,10 +391,24 @@ env vars on Vercel. Never in the repo, never in the client, never in a log.
 was protecting unpublished work; the reason to store is that the team needs to
 see what the taskers are sending, and that one wins.
 
-Stored per evaluation: prompt, verdict, findings, model and date. Vercel
-Postgres, with a CSV export button. Same result as a spreadsheet without
-handling Google credentials. If they later want it to live in Drive, that is
-added on top; it does not constrain the schema.
+Stored per evaluation: prompt, verdict, findings, model and date, with a CSV
+export. Same result as a spreadsheet without handling Google credentials. If
+they later want it to live in Drive, that is added on top; it does not
+constrain the schema.
+
+**Two backends, and the one running is Blob, not Postgres.** Provisioning
+Postgres on Vercel goes through a marketplace integration that requires a human
+to accept terms in a browser, which cannot be automated from here. Waiting for
+that would have left the deployed web storing nothing, so `src/lib/db.ts` uses
+Postgres when `POSTGRES_URL` is set and a private Vercel Blob store otherwise —
+one JSON object per evaluation, keys timestamp-prefixed so listing is
+chronological. Blob was created and wired without a human.
+
+That is a real downgrade and worth naming: no SQL, and reading the list costs
+one request per record, so it will get slow long before Postgres would. The
+moment that hurts is the moment to attach Postgres — no code change, and the
+CSV export is the bridge for the rows already in Blob, which do not migrate
+themselves.
 
 ### 9.3 The UI is a textarea and a button
 

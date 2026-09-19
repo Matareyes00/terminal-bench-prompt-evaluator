@@ -6,7 +6,7 @@
 
 import { NextResponse } from "next/server";
 import { evaluate } from "../../../src/lib/evaluate.ts";
-import { save, dbConfigured } from "../../../src/lib/db.ts";
+import { save, dbConfigured, backend } from "../../../src/lib/db.ts";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -60,6 +60,6 @@ export async function POST(req: Request) {
     ...result,
     // Say plainly whether the row was written, so a missing database never
     // looks like a successful save.
-    storage: { configured: dbConfigured(), stored },
+    storage: { configured: dbConfigured(), stored, backend: backend() },
   });
 }

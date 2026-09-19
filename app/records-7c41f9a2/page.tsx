@@ -2,7 +2,7 @@
 // deliberately not guessable and not linked from the main page. That is
 // obscurity, not security: anyone with the URL can read it. SPEC section 9.2.
 
-import { list, dbConfigured } from "../../src/lib/db.ts";
+import { list, dbConfigured, backend } from "../../src/lib/db.ts";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -11,6 +11,7 @@ export const metadata = { robots: { index: false, follow: false } };
 
 export default async function Records() {
   const configured = dbConfigured();
+  const store = backend();
   const rows = configured ? await list(200) : [];
 
   return (
@@ -19,15 +20,16 @@ export default async function Records() {
         <h1>Evaluation records</h1>
         <p>
           Everything submitted through the check endpoint. Newest first, most recent 200.
+          {configured && <> Storage backend: <code>{store}</code>.</>}
         </p>
       </header>
 
       {!configured && (
         <div className="banner">
-          <strong>No database configured.</strong> Nothing is being stored. Attach a
-          Postgres store to the project (it sets <code>POSTGRES_URL</code> or{" "}
-          <code>DATABASE_URL</code>) and rows will start appearing here — the table is
-          created on first write.
+          <strong>No storage configured.</strong> Nothing is being kept. Attach a Postgres
+          store (which sets <code>POSTGRES_URL</code>) or a Vercel Blob store (which sets{" "}
+          <code>BLOB_READ_WRITE_TOKEN</code>) and rows start appearing here; neither needs a
+          migration step.
         </div>
       )}
 

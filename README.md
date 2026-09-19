@@ -1,152 +1,166 @@
-# prompt-evaluator-tbench4
+# G0 — Terminal-Bench 4.0 prompt check
 
-G0 gate for Terminal-Bench 4.0 tasks: someone pastes the prompt they are
-thinking of building, and the tool says **whether it is worth starting**.
+**https://terminal-bench-prompt-evaluator.vercel.app**
 
-It does not approve tasks. Approving or rejecting the complete package belongs
-to the team's packaging tool. Why that split exists, and on what evidence it
-was drawn, is in **[SPEC.md](SPEC.md)** — that is the document to read, not
-this one.
+Paste the instruction you are thinking of building. The tool reads the prose
+and tells you what a reviewer is going to flag, before you spend a day on the
+verifier, the Docker image and the tests.
 
-## Status
+It does **not** approve tasks, and it does not yet tell you whether a task is
+too easy or too hard. What it does today is catch the mechanical problems that
+made up most of the blocking feedback on the last round — in about a second,
+for free.
 
-| Phase | What | State |
+---
+
+## How to use it
+
+Three inputs, two of them optional.
+
+| Field | Needed? | What it unlocks |
 |---|---|---|
-| 0 | Labelled corpus | done — 63 tasks |
-| 1 | Deterministic layer | done — gate green |
-| 2 | Probes (OpenRouter) | next |
-| 3 | Dial derivation | pending |
-| 4 | Web UI + deploy | done — v0, no dial |
+| **instruction.md** | yes | everything below |
+| **Slug** | optional | the `task_name` checks (length, kebab-case, generic names) |
+| **[agent].timeout_sec** | optional | the exact trailer check — whether the number in your prompt matches `task.toml` |
 
-## Requirements
+Paste the prompt exactly as it will ship, canary and trailer included if you
+already have them. Leaving them out while drafting is fine: they come back as
+*pending*, not as errors.
 
-Node **>= 22.6** (`--experimental-strip-types`). Pinned in `engines.node` in
-`package.json` and in `.nvmrc`. On Vercel, `engines.node` is what selects the
-build and runtime Node for a Next.js project — there is no `vercel.json` field
-that pins it for App Router route handlers, so `vercel.json` stays minimal
-rather than carrying a `functions` glob that can fail the build by matching
-nothing.
+---
 
-On an older Node the commands below fail with `bad option`; use `npx tsx
-<file>` there, which leaves the global install alone.
+## How it evaluates
 
-## The CLI
+### It predicts a review. It does not have opinions.
 
-What the team can use today: the deterministic layer over an `instruction.md`,
-with no key and no network.
+Every finding carries the sentence from `rubric/task-implementation.toml`, or
+from the upstream CI script, that justifies it. You can open that citation on
+any finding — it sits collapsed under **Rubric citation**. If a check cannot
+cite a rule, it does not exist. This matters: a tool that blocks your work on
+its own taste is worse than no tool.
+
+### Four severities, and they mean different things
+
+| | What it means | What to do |
+|---|---|---|
+| **Blocks** | The prompt is wrong and the review will flag it | Fix before building |
+| **Risk** | A real risk, but it depends on context the tool cannot see | Your call |
+| **Pending packaging** | Mechanical, belongs to the packaging stage | Ignore while drafting |
+| **Note** | A signal, no verdict | — |
+
+The canary and the trailer come back as *pending*, not *blocking*. A draft does
+not have them yet, and painting a draft red teaches people to ignore the tool.
+A trailer that is **present and malformed** does block, because that is a real
+mistake rather than an unfinished step.
+
+### What it checks today
+
+25 checks across 7 rubric criteria. The ones that block:
+
+- **Instruction concision** — markdown headings; relative paths instead of
+  absolute; an input the task says to read with no path given for it;
+  step-by-step procedures; numbered lists of steps to follow; explicit hints at
+  the approach; a trailer in the wrong place or carrying the wrong timeout.
+- **Novelty** — a link to a public PR, or a reference to an upstream commit.
+- **Task name** — a slug over 3 tokens, or not lowercase kebab-case.
+- **Structured output** — the task asks for JSON/CSV output but never documents
+  the schema.
+- **Environment hygiene** — a malformed canary, or the old TB2 canary.
+
+The ones that only warn: roleplay preamble, listing available tools,
+prescribing the method instead of the outcome, generic slugs, bare filenames
+that may or may not be paths, and `do not modify` statements that the verifier
+will have to enforce.
+
+### How well it works
+
+Measured against 63 labelled tasks — 34 synthetic fixtures, 27 real
+terminal-bench tasks with human labels, 2 reference TB4 packages.
+
+| Criterion | n | precision | recall |
+|---|---:|---:|---:|
+| `instruction_concision` | 10 | 100 % | 100 % |
+| `task_name` | 3 | 100 % | 100 % |
+| `structured_data_schema` | 10 | 100 % | 100 % |
+| `novel` | 10 | — | **0 %** |
+
+Zero false positives on the two reference packages that clear every gate. That
+is the number that matters most here: a tool that flags good work gets ignored.
+
+`novel` at 0 % recall is deliberate. The deterministic layer only catches a
+pasted PR link. Whether a problem is *actually* novel cannot be settled by a
+regex, and faking it with a blacklist of known problems would look better on
+this table without helping on the task you write tomorrow.
+
+---
+
+## What it does **not** decide
+
+This is the part to read before trusting a clean result.
+
+**A clean result is not approval.** The layer running today decides **3 of the
+15 criteria** the tool is eventually meant to decide, and **none of them are
+about difficulty**. Zero findings means "nothing a regex can prove is wrong",
+not "go build it".
+
+Still missing:
+
+| | Status |
+|---|---|
+| Is it too easy / too hard? (the dial) | **not running** |
+| Is it genuinely novel? | not running — needs the probes |
+| Is it genuinely agentic? | not running |
+| Does the difficulty come from the real problem or from clerical detail? | not running |
+| Verifier, Docker, `task.toml`, artifacts, reward | out of scope — the packaging tool |
+| Do the tests match the instruction? | out of scope until you can paste the tests |
+
+The machinery behind the difficulty questions exists and has been measured
+once, against the 7 tasks that carry a human `novel` label. On the 5 of those 7
+that produced a usable answer it separated them perfectly — encouraging, and
+**not** enough to switch on: at that size the result has a 1-in-10 chance of
+happening at random. It gets wired in when there are more labelled tasks to
+check it against. Details in [SPEC.md](SPEC.md), section 9.4.
+
+---
+
+## Where the submissions go
+
+Every check is stored: the prompt, the verdict, the findings and the timestamp.
+The team reads them to see what is actually being submitted.
+
+- Records: `/records-7c41f9a2`
+- CSV of everything: `/records-7c41f9a2/export`
+
+That path is unguessable and linked from nowhere, which is the only thing
+protecting it — there is no login yet. Treat the URL as a secret. If that is
+not good enough for what people are pasting, say so and it gets auth.
+
+---
+
+## For developers
+
+The same checks run from the terminal with no key and no network, which is
+useful in a pre-commit hook or in CI — it exits non-zero when there are
+blockers:
 
 ```bash
-npm run g0 -- path/to/the-task            # directory: picks up slug and timeout
-npm run g0 -- path/to/instruction.md
-cat prompt.md | npm run g0 -- -           # via stdin
-npm run g0 -- path/to/the-task --cites    # with the rubric citation
-npm run g0 -- path/to/instruction.md --json
+npm run g0 -- path/to/the-task         # a task dir: picks up slug and timeout
+cat prompt.md | npm run g0 -- -
+npm run g0 -- path/to/task --cites     # show the rubric citation inline
 ```
 
-Pointed at a task **directory** it pulls two more things from context: the
-directory name as the slug (enables `task_name`) and `[agent].timeout_sec` from
-the `task.toml` alongside it (enables the exact trailer check).
-
-It exits **0** when there are no blockers and **1** when there is at least one,
-so it works in a hook or in CI. It never emits `START`: that needs the probes,
-and a green from Layer 1 is not a green light (SPEC sections 1 and 5).
-
-## The web (v0)
-
-One page: a textarea, an optional slug, an optional `[agent].timeout_sec`, and
-a button. The verdict sits at the top, findings are grouped by severity with
-blockers first, and each finding's rubric citation is collapsed behind a
-disclosure rather than leading with it.
+Requires Node >= 22.6 (`--experimental-strip-types`); on an older Node use
+`npx tsx <file>`. The web route and the CLI import the same module, and a test
+asserts they return identical findings, so the table above describes both.
 
 ```bash
-npm run dev     # http://localhost:3000
-npm run build
-npm start
+npm run build        # next build
+npm test             # CLI regressions + CLI/API parity
+npm run eval:static  # re-measure against the 63-task corpus
+npm run probes       # the probe measurement (needs a model key)
 ```
 
-**v0 has no dial.** No RAISE/LOWER, no START. The probes are not wired, and the
-page says so in the open. A result with zero findings is never presented as
-approval: the panel states that the deterministic layer decides 3 of the 15
-criteria G0 is meant to decide, and that none of them are difficulty, novelty
-or derivability.
-
-`POST /api/check` imports `src/lib/checks` — the web reimplements nothing. The
-findings the page renders are the same objects the CLI prints, and
-`cli/parity.test.ts` runs the same prompts through a real CLI subprocess and
-through the route handler and asserts the findings are identical. Without that
-test the web could drift from the layer SPEC section 7 measured and nobody
-would notice.
-
-### Records and export
-
-Evaluations are stored with prompt, verdict, findings, timestamp and a `model`
-column that stays null until the probes exist (SPEC section 9.2). The table is
-created on first write, so there is no migration step.
-
-- `/records-7c41f9a2` — the records view
-- `/records-7c41f9a2/export` — the same rows as CSV
-
-v1 has no auth, so that unguessable path is the only barrier and the page is
-not linked from anywhere. It is obscurity, not security: anyone with the URL
-can read it.
-
-Persistence needs a Postgres store attached to the project, which sets
-`POSTGRES_URL` (or `DATABASE_URL`). **Without one the check still works** — the
-API answers normally and reports `storage: { configured: false, stored: false }`
-rather than pretending the row was saved.
-
-## Running what exists
-
-```bash
-python3 corpus/build_corpus.py                       # rebuilds corpus.json
-node --experimental-strip-types eval/run-static.ts   # measures against the corpus
-node --experimental-strip-types eval/run-static.ts --verbose
-npm test                                             # CLI regressions
-```
-
-Phase 1 results live in `eval/results/`, and are discussed in SPEC.md section 7.
-
-## Layout
-
-```
-app/page.tsx               the one page
-app/api/check/route.ts     POST endpoint; imports the shared check layer
-app/records-7c41f9a2/      records view + CSV export
-cli/g0.ts                  the CLI: deterministic layer from the terminal
-cli/parity.test.ts         asserts the CLI and the API return identical findings
-src/lib/evaluate.ts        the single definition of an evaluation
-src/lib/db.ts              persistence; degrades to a no-op with no database
-corpus/build_corpus.py     assembles the labelled set from three sources
-corpus/corpus.json         63 tasks with rubric labels
-src/lib/checks/types.ts    the output contract (Finding, Severity, Verdict)
-src/lib/checks/static.ts   the deterministic layer
-eval/run-static.ts         measurement harness + gate
-SPEC.md                    how it evaluates, and why
-```
-
-## Rebuilding the corpus from scratch
-
-`corpus/build_corpus.py` reads two external trees:
-
-- the TB4 starter pack (`PACK`), which supplies the 34 fixtures and the 2
-  positives;
-- the `laude-institute/terminal-bench` repo (`TB2REF`), which supplies the
-  bodies of the 27 labelled tb2 tasks.
-
-Both paths are hardcoded at the top of the script and point at the machine it
-was first written on, so set them before running. For the second, a blobless
-clone is enough:
-
-```bash
-git clone --filter=blob:none --no-checkout --depth 1 \
-  https://github.com/laude-institute/terminal-bench.git tb2ref
-```
-
-plus a sparse-checkout of `original-tasks/<name>/task.yaml` for the 27.
-
-## Secrets
-
-The OpenRouter key lives in a server-side env var and is read only from API
-routes. It never reaches the browser, never enters the repo, never appears in
-a log. Locally it goes in `.env.local`, which `.gitignore` already covers. This
-project has its own key: do not reuse another project's.
+Storage is Postgres when `POSTGRES_URL` is set and Vercel Blob otherwise; with
+neither, the check still answers and reports that nothing was stored. Design
+decisions, the evidence behind them, and what is deliberately left undone are
+in **[SPEC.md](SPEC.md)**.
