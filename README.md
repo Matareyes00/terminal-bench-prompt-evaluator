@@ -20,10 +20,15 @@ this one.
 
 ## Requirements
 
-Node **>= 22.6** (`--experimental-strip-types`). Pinned in three places:
-`engines.node` in `package.json`, `.nvmrc`, and the function runtime in
-`vercel.json`. On an older Node the commands below fail with `bad option`; use
-`npx tsx <file>` there, which leaves the global install alone.
+Node **>= 22.6** (`--experimental-strip-types`). Pinned in `engines.node` in
+`package.json` and in `.nvmrc`. On Vercel, `engines.node` is what selects the
+build and runtime Node for a Next.js project — there is no `vercel.json` field
+that pins it for App Router route handlers, so `vercel.json` stays minimal
+rather than carrying a `functions` glob that can fail the build by matching
+nothing.
+
+On an older Node the commands below fail with `bad option`; use `npx tsx
+<file>` there, which leaves the global install alone.
 
 ## The CLI
 
