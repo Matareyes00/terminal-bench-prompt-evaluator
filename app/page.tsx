@@ -44,6 +44,9 @@ export default function Page() {
   const [probeBusy, setProbeBusy] = useState(false);
   const [probeError, setProbeError] = useState<string | null>(null);
   const [probe, setProbe] = useState<ProbeReport | null>(null);
+  const [prUrl, setPrUrl] = useState("");
+  const [codeBusy, setCodeBusy] = useState(false);
+  const [codeError, setCodeError] = useState<string | null>(null);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -75,6 +78,7 @@ export default function Page() {
   async function runProbes() {
     setProbeBusy(true);
     setProbeError(null);
+    setCodeError(null);
     setProbe(null);
     try {
       const res = await fetch("/api/probe", {
@@ -83,9 +87,33 @@ export default function Page() {
         body: JSON.stringify({ prompt }),
       });
       const data = await res.json();
-      if (!res.ok)
+      if (!res.ok) {
         setProbeError(typeof data?.error === "string" ? data.error : "The probes failed.");
-      else setProbe(data as ProbeReport);
+        return;
+      }
+      setProbe(data as ProbeReport);
+
+      // The with-code reading is a separate request: three reasoning models
+      // reading a repository takes minutes, and bundling it with the blind
+      // probe ran past the timeout. The blind result is already on screen
+      // while this one works.
+      if (prUrl) {
+        setCodeBusy(true);
+        try {
+          const cres = await fetch("/api/probe/code", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ prompt, prUrl }),
+          });
+          const cdata = await cres.json();
+          if (!cres.ok) setCodeError(typeof cdata?.error === "string" ? cdata.error : "Failed.");
+          else setProbe((prev) => (prev ? { ...prev, ...cdata } : prev));
+        } catch {
+          setCodeError("The with-code probe timed out. It can take several minutes.");
+        } finally {
+          setCodeBusy(false);
+        }
+      }
     } catch {
       setProbeError("Could not reach the probe endpoint. It can take up to a minute.");
     } finally {
@@ -173,6 +201,10 @@ export default function Page() {
           probeBusy={probeBusy}
           probeError={probeError}
           onRunProbes={runProbes}
+          prUrl={prUrl}
+          setPrUrl={setPrUrl}
+          codeBusy={codeBusy}
+          codeError={codeError}
         />
       )}
 
@@ -193,12 +225,20 @@ function Results({
   probeBusy,
   probeError,
   onRunProbes,
+  prUrl,
+  setPrUrl,
+  codeBusy,
+  codeError,
 }: {
   result: Result;
   probe: ProbeReport | null;
   probeBusy: boolean;
   probeError: string | null;
   onRunProbes: () => void;
+  prUrl: string;
+  setPrUrl: (v: string) => void;
+  codeBusy: boolean;
+  codeError: string | null;
 }) {
   const { counts, verdict, findings } = result;
   const blocked = verdict === "blockers";
@@ -255,21 +295,58 @@ function Results({
           </p>
         )}
         {!probe && (
+          <div className="pr-field">
+            <label htmlFor="pr">Pull request URL — not available yet</label>
+            <input
+              id="pr"
+              value={prUrl}
+              onChange={(e) => setPrUrl(e.target.value)}
+              placeholder="https://github.com/owner/repo/pull/123"
+              spellCheck={false}
+              disabled
+            />
+            <p className="hint">
+              This is the reading that answers whether the task is hard <b>once you have
+              the repository</b> — the models get the files as they stood before the fix,
+              the touched ones unlabelled among their siblings. It is built and it works,
+              but two reasoning models reading a repository takes longer than a web
+              request is allowed to last, so it cannot run from this page yet. Until it
+              runs as a background job, the reading below only tells you whether the fix
+              is derivable from your prose.
+            </p>
+          </div>
+        )}
+        {!probe && (
           <button type="button" onClick={onRunProbes} disabled={probeBusy}>
-            {probeBusy ? "Three models are working…" : "Measure difficulty"}
+            {probeBusy
+              ? prUrl
+                ? "Solving blind, then with the code…"
+                : "Three models are working…"
+              : prUrl
+                ? "Measure difficulty (blind + with code)"
+                : "Measure difficulty"}
           </button>
         )}
         {probeError && <p className="error">{probeError}</p>}
-        {probe && <ProbeResult report={probe} />}
+        {probe && <ProbeResult report={probe} codeBusy={codeBusy} codeError={codeError} />}
       </section>
     </div>
   );
 }
 
-function ProbeResult({ report }: { report: ProbeReport }) {
-  const { dial, answers, convergence: conv } = report;
+function ProbeResult({
+  report,
+  codeBusy,
+  codeError,
+}: {
+  report: ProbeReport;
+  codeBusy: boolean;
+  codeError: string | null;
+}) {
+  const { dial, answers, convergence: conv, codeDial, code } = report;
   return (
     <>
+      <p className="axis-label">Without the code — is the fix derivable from your prose?</p>
       <div className={`dial ${DIAL_TONE[dial.direction]}`}>
         <h2>{dial.headline}</h2>
         <p className="because">{dial.because}</p>
@@ -290,9 +367,74 @@ function ProbeResult({ report }: { report: ProbeReport }) {
         {dial.evidence}
       </div>
 
+      {codeBusy && (
+        <p className="axis-label">
+          With the code — two models are reading the repository, this takes a few minutes…
+        </p>
+      )}
+      {codeError && <p className="error">{codeError}</p>}
+
+      {code && !codeDial && (
+        <div className="not-approval">
+          <strong>The with-code probe did not run</strong>
+          {code.notes.join(" ")}
+        </div>
+      )}
+
+      {codeDial && code && (
+        <>
+          <p className="axis-label">
+            With the code — is it hard once you have the repository?
+          </p>
+          <div className={`dial ${DIAL_TONE[codeDial.direction]}`}>
+            <h2>{codeDial.headline}</h2>
+            <p className="because">{codeDial.because}</p>
+            <p className="action">
+              <b>What to do:</b> {codeDial.action}
+            </p>
+            <p className="criteria">
+              {code.repo}#{code.number} at {code.baseSha} · {code.files} files shown,{" "}
+              {code.decoys} of them irrelevant
+            </p>
+          </div>
+          <div className="not-approval">
+            <strong>How much this is worth</strong>
+            {codeDial.evidence}
+          </div>
+          <details className="workings">
+            <summary>
+              Where each model looked ({code.located} of {code.attempted} found the right
+              file)
+            </summary>
+            {code.answers.map((a) => (
+              <div className="answer" key={a.model}>
+                <p className="who">
+                  {a.model}
+                  <span className={`tag ${a.correct ? "" : "warn-tag"}`}>
+                    {a.correct ? "right file" : "wrong file"}
+                  </span>
+                  {a.obvious && <span className="tag">said it was obvious</span>}
+                </p>
+                <p className="kv">
+                  <b>file</b> {a.file || "—"}
+                </p>
+                <p className="kv">
+                  <b>fix</b> {a.fix || "—"}
+                </p>
+              </div>
+            ))}
+            {code.notes.length > 0 && (
+              <div className="answer">
+                <p className="kv">{code.notes.join(" ")}</p>
+              </div>
+            )}
+          </details>
+        </>
+      )}
+
       <details className="workings">
         <summary>
-          What the models actually said ({conv.answered} attempted,{" "}
+          What the models said with no code ({conv.answered} attempted,{" "}
           {conv.abstained.length} asked to see the code)
         </summary>
         {answers.map((a) => (

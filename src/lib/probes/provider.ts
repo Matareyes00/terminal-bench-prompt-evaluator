@@ -187,7 +187,11 @@ export function extractJson<T>(text: string): T {
   const start = raw.indexOf("{");
   const end = raw.lastIndexOf("}");
   if (start === -1 || end === -1 || end <= start) {
-    throw new Error(`No JSON object in model output: ${text.slice(0, 200)}`);
+    throw new Error(
+      text.trim() === ""
+        ? "Empty completion - the token budget was most likely consumed by reasoning before any answer was emitted."
+        : `No JSON object in model output: ${text.slice(0, 200)}`,
+    );
   }
   return JSON.parse(raw.slice(start, end + 1)) as T;
 }

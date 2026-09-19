@@ -9,6 +9,7 @@
 
 import type { Probe1Response } from "./probes/probe1.ts";
 import type { ConvergenceResult } from "./probes/convergence.ts";
+import type { WithCodeResult } from "./probes/withcode.ts";
 
 export type Direction = "raise" | "specify" | "ok" | "needs_human";
 
@@ -34,6 +35,12 @@ const EVIDENCE =
   "5 produced a usable answer and it separated all 5 correctly — at that size " +
   "there is roughly a 1-in-10 chance of that happening by luck. Treat this as a " +
   "strong hint, not a verdict.";
+
+const CODE_EVIDENCE =
+  "This reading has not been validated against labelled tasks at all — the " +
+  "corpus has 6 tasks with a human `difficult` label and the with-code probe " +
+  "has never been scored against them. It reports what three models did with " +
+  "your code; whether that predicts a reviewer's judgement is untested.";
 
 export function deriveDial(
   responses: Probe1Response[],
@@ -120,9 +127,99 @@ export function deriveDial(
   };
 }
 
+/**
+ * The second reading, and the one that actually answers "is it hard".
+ *
+ * Blind-solve cannot tell a genuinely hard task from a trivial one with a vague
+ * prompt: both end with the models asking to see the code. This reads what
+ * happened when they were given it.
+ */
+export function deriveCodeDial(wc: WithCodeResult): Dial {
+  const { located, attempted } = wc;
+  const { decoys, files } = wc.bundle;
+  const obvious = wc.answers.filter((a) => a.correct && a.obvious).length;
+
+  const caveat =
+    decoys === 0
+      ? ` Read this gently: the bundle contained only files the PR touched, so the models were effectively told where to look.`
+      : ` The models were shown ${files} files with no indication of which mattered; ${decoys} were irrelevant.`;
+
+  if (attempted === 0) {
+    return {
+      direction: "needs_human",
+      headline: "No model completed the with-code attempt",
+      because: "Every model failed or returned something unparseable.",
+      criteria: ["difficult"],
+      action: "Try again, or read the errors below.",
+      evidence: "No measurement was taken.",
+    };
+  }
+
+  if (located === 0) {
+    return {
+      direction: "ok",
+      headline: "Hard even with the code",
+      because: `None of the ${attempted} models found the right file, with the whole pre-fix state in front of them.${caveat}`,
+      criteria: ["difficult", "agentic", "essential_difficulty"],
+      action:
+        "Nothing to change on this axis. Locating the defect is real work, which is what the benchmark is buying.",
+      evidence: CODE_EVIDENCE,
+    };
+  }
+
+  if (located === attempted && obvious >= Math.ceil(attempted / 2)) {
+    return {
+      direction: "raise",
+      headline: "Easy once the code is in hand",
+      because: `All ${attempted} models found the right file, and ${obvious} said the defect was obvious on reading.${caveat} Asking to see the code is not the same as the code being hard to read.`,
+      criteria: ["difficult", "essential_difficulty"],
+      action:
+        "The agent will find this quickly. Make the defect require reasoning across files, or reproduce a failure whose cause is not in the file that shows the symptom.",
+      evidence: CODE_EVIDENCE,
+    };
+  }
+
+  if (located === attempted) {
+    return {
+      direction: "needs_human",
+      headline: "Found, but not at a glance",
+      because: `All ${attempted} models found the right file, but they report having had to work for it.${caveat}`,
+      criteria: ["difficult"],
+      action:
+        "Borderline. Read their answers below: if the reasoning they describe is the work you intended, the task is doing its job.",
+      evidence: CODE_EVIDENCE,
+    };
+  }
+
+  return {
+    direction: "needs_human",
+    headline: `${located} of ${attempted} found it`,
+    because: `The models split on where the defect lives.${caveat}`,
+    criteria: ["difficult", "agentic"],
+    action:
+      "A split usually means the symptom is visible from more than one place. Read the answers below and decide whether that ambiguity is intended.",
+    evidence: CODE_EVIDENCE,
+  };
+}
+
 /** Everything the probe endpoint returns, so the page can show the workings. */
 export interface ProbeReport {
   dial: Dial;
+  /** Present only when a PR URL was supplied. */
+  codeDial?: Dial;
+  code?: {
+    repo: string;
+    number: number;
+    title: string;
+    baseSha: string;
+    files: number;
+    decoys: number;
+    notes: string[];
+    located: number;
+    attempted: number;
+    answers: Array<{ model: string; file: string; fix: string; obvious: boolean; correct: boolean }>;
+    errors: Array<{ model: string; error: string }>;
+  };
   models: string[];
   answers: Array<{
     model: string;
