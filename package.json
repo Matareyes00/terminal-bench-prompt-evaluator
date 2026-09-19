@@ -1,0 +1,19 @@
+{
+  "name": "prompt-evaluator-tbench4",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "corpus": "python3 corpus/build_corpus.py",
+    "eval:static": "node --experimental-strip-types eval/run-static.ts",
+    "eval:static:verbose": "node --experimental-strip-types eval/run-static.ts --verbose",
+    "g0": "node --experimental-strip-types cli/g0.ts",
+    "test": "node --experimental-strip-types --test cli/*.test.ts"
+  },
+  "engines": {
+    "node": ">=22.6"
+  },
+  "bin": {
+    "g0": "cli/g0.ts"
+  }
+}
