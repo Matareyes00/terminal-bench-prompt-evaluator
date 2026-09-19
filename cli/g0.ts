@@ -143,6 +143,22 @@ export function agentTimeout(toml: string): number | undefined {
   return undefined;
 }
 
+/** [task].name from a task.toml, which is the slug the review sees. */
+export function taskName(toml: string): string | undefined {
+  let inTask = false;
+  for (const raw of toml.split("\n")) {
+    const line = raw.trim();
+    if (line.startsWith("[")) {
+      inTask = line === "[task]";
+      continue;
+    }
+    if (!inTask) continue;
+    const m = line.match(/^name\s*=\s*"([^"]+)"/);
+    if (m) return m[1];
+  }
+  return undefined;
+}
+
 /** Resolves the input: a file, a task directory, or stdin. */
 function load(p: string | undefined): { prompt: string; slug?: string; timeout?: number } {
   if (!p || p === "-") {
@@ -165,8 +181,16 @@ function load(p: string | undefined): { prompt: string; slug?: string; timeout?:
     }
     const toml = join(abs, "task.toml");
     let timeout: number | undefined;
-    if (existsSync(toml)) timeout = agentTimeout(readFileSync(toml, "utf8"));
-    return { prompt: readFileSync(md, "utf8"), slug: basename(abs), timeout };
+    let declared: string | undefined;
+    if (existsSync(toml)) {
+      const raw = readFileSync(toml, "utf8");
+      timeout = agentTimeout(raw);
+      declared = taskName(raw);
+    }
+    // [task].name wins over the directory. A delivery bundle puts the task in a
+    // fixed folder - `harbor-task` - so the directory name says nothing about
+    // the slug that will actually be reviewed.
+    return { prompt: readFileSync(md, "utf8"), slug: declared ?? basename(abs), timeout };
   }
 
   return { prompt: readFileSync(abs, "utf8") };
