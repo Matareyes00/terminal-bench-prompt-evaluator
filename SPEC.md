@@ -283,7 +283,7 @@ tb2 tasks, and on the tasks the team delivers from here on.
 | Criterion | n | precision | recall |
 |---|---:|---:|---:|
 | `instruction_concision` | 10 | 100 % | 100 % |
-| `task_name` | 3 | 100 % | 100 % |
+| `task_name` | 3 | — | 0 % |
 | `structured_data_schema` | 10 | 100 % | 100 % |
 | `novel` | 10 | — | **0 %** |
 
@@ -352,19 +352,52 @@ request was after — raise or lower complexity — lives in the probe layer.
    precision. Until new tasks that satisfy the precondition arrive, this check
    is a well-founded hypothesis, not a result.
 
-3. **Recorded fixtures.** A demoable subset, not all 63: the 2 positives and 6
+3. **`slug-tokens` dropped from `blocker` to `warn`, on evidence.** Two
+   approved TB4 deliveries were run through the tool and both were blocked on
+   `task_name` for having four hyphen-separated tokens. Both had shipped.
+
+   The rubric is on the check's side and says so twice: *"Names must be at most
+   3 words (hyphen-separated tokens)"* and *"FAIL if … longer than 3 words"*.
+   The only other evidence for a blocker is the synthetic fixture
+   `fail-rubric-task-name`, which has four tokens because it exists to fail
+   this check — and section 6 already says the synthetic fixtures verify
+   attribution, not the fine boundary. Two pieces of real approved work outrank
+   one fixture, so the severity moved and the criterion's recall went from
+   100 % to 0 % on n=3. That cost is the honest one: the alternative was a
+   blocker with a 2-of-2 false positive rate on approved tasks.
+
+   **Worth chasing separately:** the canonical script reads
+   `basename(task_dir)`, and a delivery bundle ships the task inside a fixed
+   `harbor-task` folder. Upstream CI therefore never evaluates the real slug at
+   all, which is why a four-token name reaches approval unchallenged. That is a
+   gap in the upstream check, not in this one.
+
+4. **The dial disagreed with an approval, for a reason worth reading.** One of
+   the two approved tasks came back **RAISE**: two models produced the same
+   concrete fix from the prose alone. The convergence is real, and its cause is
+   specific — the instruction *lists the five files to change* and states the
+   required behaviour in full. The models did not derive the location; they were
+   handed it.
+
+   This exposes a weakness in the convergence rule. It scores agreement on
+   place and semantics, but when the prompt names the files, the "place" half
+   is free and the agreement is inflated. The fix is mechanical and not yet
+   implemented: discount place-agreement when the prompt itself contains the
+   file name the models returned.
+
+5. **Recorded fixtures.** A demoable subset, not all 63: the 2 positives and 6
    that exercise each verdict path. Fixture key = hash of (prompt + probe prompt
    version), so they invalidate themselves when a probe changes instead of
    rotting silently.
 
-4. **The calibration loop.** The tool "predicts the review the task is going to
+6. **The calibration loop.** The tool "predicts the review the task is going to
    receive", and today the only evidence is the 6 tasks from the 2026-09-16
    feedback. Without new reviews the calibration freezes where it is. The
    artefact to request from the team is the `check_report.json` from
    `harbor check`: every delivery produces one, it carries a per-criterion
    verdict, and no format has to be invented. Cadence: one per delivery.
 
-5. **Dial calibration** against tasks with a measured pass rate.
+7. **Dial calibration** against tasks with a measured pass rate.
    `omnigent-host-lifecycle` from last week has 10 attempts and two models; it
    is the only prompt for which we know empirically what frontier models do. It
    is worth more than any synthetic fixture. What is useful from that run is the

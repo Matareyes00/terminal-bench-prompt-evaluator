@@ -121,15 +121,21 @@ UI with that explanation rather than shipping a control that always fails.
   step-by-step procedures; numbered lists of steps to follow; explicit hints at
   the approach; a trailer in the wrong place or carrying the wrong timeout.
 - **Novelty** — a link to a public PR, or a reference to an upstream commit.
-- **Task name** — a slug over 3 tokens, or not lowercase kebab-case.
+- **Task name** — a slug that is not lowercase kebab-case.
 - **Structured output** — the task asks for JSON/CSV output but never documents
   the schema.
 - **Environment hygiene** — a malformed canary, or the old TB2 canary.
 
 The ones that only warn: roleplay preamble, listing available tools,
-prescribing the method instead of the outcome, generic slugs, bare filenames
-that may or may not be paths, and `do not modify` statements that the verifier
-will have to enforce.
+prescribing the method instead of the outcome, generic slugs, **slugs longer
+than 3 tokens**, bare filenames that may or may not be paths, and `do not
+modify` statements that the verifier will have to enforce.
+
+The slug length one used to block. Two approved TB4 deliveries were run through
+the tool and both came back blocked on it — both have four-token names and both
+shipped. The rubric text is on the check's side (*"Names must be at most 3
+words (hyphen-separated tokens)"*), but a rule that blocks two of two approved
+tasks is not predicting the review. You still see it; you decide.
 
 ### How well it works
 
@@ -139,12 +145,16 @@ terminal-bench tasks with human labels, 2 reference TB4 packages.
 | Criterion | n | precision | recall |
 |---|---:|---:|---:|
 | `instruction_concision` | 10 | 100 % | 100 % |
-| `task_name` | 3 | 100 % | 100 % |
+| `task_name` | 3 | — | 0 % |
 | `structured_data_schema` | 10 | 100 % | 100 % |
 | `novel` | 10 | — | **0 %** |
 
 Zero false positives on the two reference packages that clear every gate. That
 is the number that matters most here: a tool that flags good work gets ignored.
+
+`task_name` reads 0 % because its only detection was the slug-length rule, and
+that dropped to a warning after it blocked two approved tasks (above). Its one
+remaining miss is a synthetic fixture built to fail exactly that check.
 
 `novel` at 0 % recall is deliberate. The deterministic layer only catches a
 pasted PR link. Whether a problem is *actually* novel cannot be settled by a
