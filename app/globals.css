@@ -1,0 +1,414 @@
+:root {
+  --bg: #fbfbfa;
+  --panel: #ffffff;
+  --ink: #16150f;
+  --ink-soft: #5c5a52;
+  --ink-faint: #8a877c;
+  --line: #e2e0d8;
+  --accent: #1f5f4f;
+  --blocker: #a4262c;
+  --blocker-bg: #fcf1f1;
+  --warn: #8a5a00;
+  --warn-bg: #fdf6e8;
+  --todo: #2a5b8c;
+  --todo-bg: #eff5fb;
+  --info: #5c5a52;
+  --info-bg: #f4f3ef;
+  --radius: 10px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14140f;
+    --panel: #1c1c17;
+    --ink: #f2f0e8;
+    --ink-soft: #b3b0a4;
+    --ink-faint: #85826f;
+    --line: #2e2e26;
+    --accent: #6fbfa5;
+    --blocker: #f08b8b;
+    --blocker-bg: #2a1a1a;
+    --warn: #e0b256;
+    --warn-bg: #2a2317;
+    --todo: #82b4e0;
+    --todo-bg: #18222b;
+    --info: #b3b0a4;
+    --info-bg: #23231c;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 40px 16px 96px;
+}
+
+header h1 {
+  font-size: 1.35rem;
+  margin: 0 0 4px;
+  letter-spacing: -0.01em;
+}
+
+header p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.93rem;
+}
+
+.banner {
+  margin: 20px 0 28px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: var(--ink-soft);
+  font-size: 0.88rem;
+}
+
+.banner strong {
+  color: var(--ink);
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 6px;
+}
+
+textarea,
+input {
+  width: 100%;
+  background: var(--panel);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px 13px;
+  font-size: 0.95rem;
+  font-family: inherit;
+}
+
+textarea {
+  min-height: 260px;
+  resize: vertical;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+textarea:focus,
+input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.row {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.row > div {
+  flex: 1 1 220px;
+}
+
+.hint {
+  font-size: 0.78rem;
+  color: var(--ink-faint);
+  margin-top: 5px;
+}
+
+button {
+  align-self: flex-start;
+  background: var(--accent);
+  color: #fff;
+  border: 0;
+  border-radius: var(--radius);
+  padding: 11px 22px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) button {
+    color: #10201b;
+  }
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* ---------------------------------------------------------------- results */
+
+.results {
+  margin-top: 40px;
+  border-top: 1px solid var(--line);
+  padding-top: 28px;
+}
+
+.verdict {
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.verdict.blockers {
+  border-color: var(--blocker);
+  background: var(--blocker-bg);
+}
+
+.verdict h2 {
+  margin: 0;
+  font-size: 1.9rem;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.verdict.blockers h2 {
+  color: var(--blocker);
+}
+
+.verdict p {
+  margin: 10px 0 0;
+  color: var(--ink-soft);
+  font-size: 0.92rem;
+}
+
+.tally {
+  margin-top: 14px;
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+.tally b {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The point of this block: a clean static result is not approval. */
+.not-approval {
+  margin-top: 16px;
+  padding: 14px 15px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  background: var(--info-bg);
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+}
+
+.not-approval strong {
+  color: var(--ink);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.group {
+  margin-top: 30px;
+}
+
+.group > h3 {
+  margin: 0 0 4px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.group > .blurb {
+  margin: 0 0 14px;
+  font-size: 0.85rem;
+  color: var(--ink-faint);
+}
+
+.group.blocker > h3 {
+  color: var(--blocker);
+}
+.group.warn > h3 {
+  color: var(--warn);
+}
+.group.todo > h3 {
+  color: var(--todo);
+}
+.group.info > h3 {
+  color: var(--info);
+}
+
+.finding {
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  padding: 14px 16px;
+  margin-bottom: 10px;
+}
+
+.finding.blocker {
+  border-left-color: var(--blocker);
+}
+.finding.warn {
+  border-left-color: var(--warn);
+}
+.finding.todo {
+  border-left-color: var(--todo);
+}
+.finding.info {
+  border-left-color: var(--info);
+}
+
+.finding .msg {
+  font-weight: 600;
+  margin: 0;
+}
+
+.finding .where {
+  font-weight: 400;
+  color: var(--ink-faint);
+  font-size: 0.85rem;
+  margin-left: 6px;
+}
+
+.finding .excerpt {
+  margin: 8px 0 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  background: var(--info-bg);
+  border-radius: 6px;
+  padding: 6px 9px;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.finding .fix {
+  margin: 10px 0 0;
+  font-size: 0.92rem;
+  color: var(--ink-soft);
+}
+
+.finding .fix b {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.finding details {
+  margin-top: 11px;
+  border-top: 1px solid var(--line);
+  padding-top: 9px;
+}
+
+.finding summary {
+  cursor: pointer;
+  font-size: 0.79rem;
+  color: var(--ink-faint);
+  letter-spacing: 0.02em;
+}
+
+.finding details p {
+  margin: 8px 0 0;
+  font-size: 0.83rem;
+  color: var(--ink-soft);
+  font-style: italic;
+}
+
+.finding .tagline {
+  margin-top: 9px;
+  font-size: 0.75rem;
+  color: var(--ink-faint);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.error {
+  margin-top: 20px;
+  color: var(--blocker);
+  font-size: 0.9rem;
+}
+
+footer {
+  margin-top: 56px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+  font-size: 0.8rem;
+  color: var(--ink-faint);
+}
+
+/* ---------------------------------------------------------------- records */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  margin-top: 18px;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+th {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-faint);
+}
+
+td.num {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+td .snippet {
+  display: block;
+  max-width: 420px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink-soft);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.8rem;
+}
+
+a {
+  color: var(--accent);
+}

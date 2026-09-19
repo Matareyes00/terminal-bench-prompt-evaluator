@@ -8,12 +8,25 @@
     "eval:static": "node --experimental-strip-types eval/run-static.ts",
     "eval:static:verbose": "node --experimental-strip-types eval/run-static.ts --verbose",
     "g0": "node --experimental-strip-types cli/g0.ts",
-    "test": "node --experimental-strip-types --test cli/*.test.ts"
+    "test": "node --experimental-strip-types --test cli/*.test.ts",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
   },
   "engines": {
     "node": ">=22.6"
   },
-  "bin": {
-    "g0": "cli/g0.ts"
+  "dependencies": {
+    "next": "^16.3.5",
+    "pg": "8.13.1",
+    "react": "19.1.1",
+    "react-dom": "19.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "22.10.2",
+    "@types/pg": "8.11.10",
+    "@types/react": "19.1.8",
+    "@types/react-dom": "19.1.6",
+    "typescript": "5.7.2"
   }
 }
