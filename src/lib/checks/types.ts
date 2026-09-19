@@ -1,58 +1,59 @@
-// Contrato de salida de G0. Estable: la UI, el harness de evaluacion y la
-// documentacion generada leen exactamente esto.
+// G0's output contract. Stable: the UI, the evaluation harness and the
+// generated documentation all read exactly this.
 
 /**
- * blocker : el prompt esta mal y la review lo va a marcar. Hay que arreglarlo
- *           antes de construir.
- * warn    : riesgo real, pero depende de contexto que G0 no ve. El autor decide.
- * todo    : mecanico y de la etapa de empaquetado. La tool del equipo lo cubre.
- *           No bloquea a alguien que todavia esta redactando el prompt.
- * info    : senal sin veredicto. Alimenta la capa de sondas.
+ * blocker : the prompt is wrong and the review will flag it. Fix it before
+ *           building.
+ * warn    : a real risk, but it depends on context G0 cannot see. The author
+ *           decides.
+ * todo    : mechanical, and belongs to the packaging stage. The team's tool
+ *           covers it. Does not block someone still drafting the prompt.
+ * info    : a signal with no verdict. Feeds the probe layer.
  */
 export type Severity = "blocker" | "warn" | "todo" | "info";
 
 export type Verdict = "pass" | "fail" | "unknown" | "na";
 
-/** Donde se decide cada criterio. Ver SPEC.md §2. */
+/** Where each criterion gets decided. See SPEC.md section 2. */
 export type Scope = "decide" | "advise" | "out";
 
 export interface Finding {
-  /** Nombre del criterio de rubric/task-implementation.toml. */
+  /** Criterion name from rubric/task-implementation.toml. */
   criterion: string;
-  /** Identificador del check que lo produjo. */
+  /** Identifier of the check that produced it. */
   check: string;
   severity: Severity;
-  /** 1-indexado sobre el prompt tal como lo pego el autor. */
+  /** 1-indexed over the prompt exactly as the author pasted it. */
   line?: number;
-  /** El fragmento exacto que disparo el hallazgo. */
+  /** The exact fragment that triggered the finding. */
   excerpt?: string;
-  /** Que esta mal, en una oracion. */
+  /** What is wrong, in one sentence. */
   message: string;
-  /** Que hacer. Ausente cuando no hay accion mecanica. */
+  /** What to do about it. Absent when there is no mechanical action. */
   fix?: string;
   /**
-   * La oracion de la rubrica o del check canonico que justifica el hallazgo.
-   * Ningun check puede existir sin esto: la herramienta predice la review que
-   * la tarea va a recibir, no inventa criterios propios.
+   * The rubric sentence or canonical check that justifies the finding.
+   * No check may exist without this: the tool predicts the review the task is
+   * going to receive, it does not invent criteria of its own.
    */
   rule: string;
 }
 
 export interface PromptInput {
-  /** El texto que el autor pego. */
+  /** The text the author pasted. */
   prompt: string;
-  /** Slug propuesto, si lo tiene. Habilita el check de task_name. */
+  /** Proposed slug, if there is one. Enables the task_name check. */
   slug?: string;
-  /** [agent].timeout_sec, si ya lo decidio. Habilita el check exacto del trailer. */
+  /** [agent].timeout_sec, if already decided. Enables the exact trailer check. */
   agentTimeoutSec?: number;
-  /** WORKDIR del entorno. Por defecto /app, igual que el check canonico. */
+  /** The environment's WORKDIR. Defaults to /app, same as the canonical check. */
   workingDir?: string;
 }
 
 export interface StaticResult {
   findings: Finding[];
-  /** Veredicto por criterio, derivado de los findings. */
+  /** Per-criterion verdict, derived from the findings. */
   byCriterion: Record<string, Verdict>;
-  /** Senales sin veredicto que consume la capa de sondas. */
+  /** Signals with no verdict, consumed by the probe layer. */
   signals: Record<string, number | string | boolean>;
 }

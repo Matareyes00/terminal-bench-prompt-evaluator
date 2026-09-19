@@ -1,23 +1,23 @@
 #!/usr/bin/env python3
 """
-Fase 0 - Construye el corpus etiquetado para calibrar G0.
+Phase 0 - Builds the labelled corpus used to calibrate G0.
 
-Tres fuentes, todas con etiqueta autoritativa:
+Three sources, all with authoritative labels:
 
-  synthetic  34 fixtures de terminal-bench/scripts/checks/test-tasks/.
-             Cada uno falla UN criterio a proposito. El nombre del directorio
-             es la etiqueta. Son negativos extremos: sirven para verificar que
-             un check dispara y se atribuye al criterio correcto, NO para
-             calibrar el limite fino.
+  synthetic  34 fixtures from terminal-bench/scripts/checks/test-tasks/.
+             Each one fails ONE criterion on purpose. The directory name is
+             the label. These are extreme negatives: they verify that a check
+             fires and is attributed to the right criterion, NOT that the fine
+             boundary is calibrated.
 
-  tb2        27 tareas reales de terminal-bench con etiquetas de evidencia
-             humana en labels.json. Siete de ellas estan etiquetadas en 15-17
-             criterios con mezcla de pass y fail. Este es el set que calibra.
+  tb2        27 real terminal-bench tasks with human-evidence labels in
+             labels.json. Seven of them are labelled across 15-17 criteria
+             with a mix of pass and fail. This is the set that calibrates.
 
-  tb4        3 paquetes del starter pack que pasan todas las compuertas.
-             Positivos. Un check que dispara aca es falso positivo.
+  tb4        Starter-pack packages that clear every gate. Positives. A check
+             that fires here is a false positive.
 
-Salida: corpus.json
+Output: corpus.json
 """
 
 import json
@@ -27,10 +27,10 @@ from pathlib import Path
 
 import yaml
 
-# --- Alcance de G0 -----------------------------------------------------------
-# decide : G0 emite veredicto pass/fail desde el prompt (+ metadata del autor)
-# advise : G0 detecta el riesgo pero no puede cerrarlo sin el paquete
-# out    : pertenece a la tool de empaquetamiento del equipo
+# --- G0 scope ----------------------------------------------------------------
+# decide : G0 emits a pass/fail verdict from the prompt (+ author metadata)
+# advise : G0 spots the risk but cannot close it without the package
+# out    : belongs to the team's packaging tool
 
 SCOPE = {
     # --- decide ---
@@ -49,7 +49,7 @@ SCOPE = {
     "difficulty_explanation_quality": "decide",
     "solution_explanation_quality": "decide",
     "verification_explanation_quality": "decide",
-    # --- advise: el prompt muestra el sintoma, el paquete tiene la prueba ---
+    # --- advise: the prompt shows the symptom, the package holds the proof ---
     "outcome_verified": "advise",
     "do_not_modify_enforced": "advise",
     "test_instruction_alignment": "advise",
@@ -81,13 +81,13 @@ TB2REF = Path(
     "/tmp/claude-0/-home-claude/a0ef6c54-1899-5d93-b0d3-d32bd9415313/scratchpad/tb2ref"
 )
 
-# Positivos TB4 del pack.
+# TB4 positives from the pack.
 #
-# template/repo-fix-task NO esta aca a proposito: es un andamio con marcadores
-# (`<slug>`, `<Symptom first, ...>`), no una tarea. Incluirlo como positivo fue
-# un error de la primera version de este script y producia un falso positivo
-# legitimo en el check de slug. Se saca porque no es una tarea, no porque el
-# check moleste.
+# template/repo-fix-task is deliberately NOT here: it is scaffolding full of
+# placeholders (`<slug>`, `<Symptom first, ...>`), not a task. Including it as
+# a positive was a mistake in the first version of this script and produced a
+# legitimate false positive in the slug check. It is out because it is not a
+# task, not because the check was inconvenient.
 TB4_POSITIVES = [
     ("runner-failure-visibility", PACK / "example/runner-failure-visibility"),
     ("vllm-deepseek-streaming", PACK / "reference/vllm-deepseek-streaming"),
@@ -95,8 +95,8 @@ TB4_POSITIVES = [
 
 
 def strip_canary(text: str) -> str:
-    """Quita la linea del canary. No es parte del prompt que el autor escribe
-    y la rubrica dice explicitamente que se ignore al evaluar concision."""
+    """Drops the canary line. It is not part of the prompt the author writes,
+    and the rubric explicitly says to ignore it when judging concision."""
     return "\n".join(
         ln for ln in text.splitlines() if not CANARY_RE.search(ln)
     ).strip()
@@ -112,7 +112,7 @@ def read_toml(p: Path) -> dict:
     try:
         return tomllib.loads(p.read_text(encoding="utf-8"))
     except Exception as e:  # noqa: BLE001
-        print(f"  ! toml ilegible {p}: {e}", file=sys.stderr)
+        print(f"  ! unreadable toml {p}: {e}", file=sys.stderr)
         return {}
 
 
@@ -154,9 +154,9 @@ def build():
                 continue
             tom = read_toml(d / "task.toml")
             meta = dict(tom.get("metadata", {}))
-            # check-task-slug.sh usa `basename "$task_dir"`. Cuando el fixture
-            # no declara [task].name, el slug efectivo es el nombre del
-            # directorio, igual que upstream.
+            # check-task-slug.sh uses `basename "$task_dir"`. When the fixture
+            # does not declare [task].name, the effective slug is the directory
+            # name, same as upstream.
             meta["slug"] = tom.get("task", {}).get("name") or d.name
             out.append(record(tid, "synthetic", ip.read_text(encoding="utf-8"), meta, labels, notes))
 
@@ -180,7 +180,7 @@ def build():
         else:
             missing.append(tid)
 
-    # Positivos TB4: sin entrada en labels.json, la etiqueta es "pasa todo".
+    # TB4 positives: with no labels.json entry, the label is "passes everything".
     for tid, d in TB4_POSITIVES:
         ip = d / "instruction.md"
         if not ip.exists():
@@ -197,7 +197,7 @@ def build():
                 ip.read_text(encoding="utf-8"),
                 meta,
                 labels,
-                "Positivo: pasa todas las compuertas del pack. Un FAIL aqui es falso positivo.",
+                "Positive: clears every gate in the pack. A FAIL here is a false positive.",
             )
         )
 
@@ -225,20 +225,20 @@ def main():
     for r in rows:
         by_src.setdefault(r["source"], []).append(r)
 
-    print(f"corpus.json  {len(rows)} tareas")
+    print(f"corpus.json  {len(rows)} tasks")
     for s, rs in sorted(by_src.items()):
-        print(f"  {s:<14} {len(rs):>3}   etiquetas en scope G0: {sum(r['n_labels_g0'] for r in rs)}")
+        print(f"  {s:<14} {len(rs):>3}   labels in G0 scope: {sum(r['n_labels_g0'] for r in rs)}")
     if missing:
-        print(f"  SIN CUERPO: {len(missing)} -> {missing}")
+        print(f"  NO BODY: {len(missing)} -> {missing}")
 
     cov = {}
     for r in rows:
         for c, v in r["labels_g0"].items():
             a, b = cov.get(c, (0, 0))
             cov[c] = (a + 1, b + (v == "pass"))
-    print("\ncobertura de criterios en scope G0 (total / pass):")
+    print("\ncriterion coverage in G0 scope (total / pass):")
     for c, (n, p) in sorted(cov.items(), key=lambda kv: -kv[1][0]):
-        bal = "balanceado" if 0 < p < n else ("solo pass" if p == n else "solo fail")
+        bal = "balanced" if 0 < p < n else ("pass only" if p == n else "fail only")
         print(f"  {n:>3} / {p:>3} pass   {SCOPE[c]:<6} {c:<34} {bal}")
 
 

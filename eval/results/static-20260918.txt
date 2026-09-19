@@ -1,20 +1,20 @@
 
-══════ Capa determinística vs corpus etiquetado ══════
+====== Deterministic layer vs labelled corpus ======
 
-criterio                        n   TP  FP  TN  FN   precisión  recall
+criterion                       n   TP  FP  TN  FN   precision  recall
 instruction_concision           10    4   0   6   0     100%     100%
 task_name                        3    1   0   2   0     100%     100%
 novel                           10    0   0   6   4       -         0%
 structured_data_schema          10    1   0   9   0     100%     100%
 
-── Gate: falsos positivos sobre los 2 positivos TB4 ──
+-- Gate: false positives on the 2 TB4 positives --
   runner-failure-visibility    blockers=0
   vllm-deepseek-streaming      blockers=0
 
-── Falsos negativos (la etiqueta dice fail, no lo vio) ──
+-- False negatives (the label says fail, the layer missed it) --
   fail-rubric-novel [synthetic] novel
   solve-sudoku [tb2] novel
   prove-plus-comm [tb2] novel
   nginx-request-logging [tb2] novel
 
-GATE FASE 1: PASA — 0 blockers sobre positivos (requerido 0)
+PHASE 1 GATE: PASS - 0 blockers on positives (required 0)

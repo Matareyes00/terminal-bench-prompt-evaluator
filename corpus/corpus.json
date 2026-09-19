@@ -1993,7 +1993,7 @@
       },
       "n_labels": 15,
       "n_labels_g0": 15,
-      "notes": "Positivo: pasa todas las compuertas del pack. Un FAIL aqui es falso positivo."
+      "notes": "Positive: clears every gate in the pack. A FAIL here is a false positive."
     },
     {
       "id": "vllm-deepseek-streaming",
@@ -2052,7 +2052,7 @@
       },
       "n_labels": 15,
       "n_labels_g0": 15,
-      "notes": "Positivo: pasa todas las compuertas del pack. Un FAIL aqui es falso positivo."
+      "notes": "Positive: clears every gate in the pack. A FAIL here is a false positive."
     }
   ]
 }

@@ -1,8 +1,8 @@
-// Mide la capa deterministica contra el corpus etiquetado.
+// Measures the deterministic layer against the labelled corpus.
 //
-// Gate de Fase 1: cero falsos positivos sobre los positivos TB4.
-// Un falso positivo le ensena al autor a ignorar la herramienta, que es peor
-// que no tenerla.
+// Phase 1 gate: zero false positives on the TB4 positives.
+// A false positive teaches the author to ignore the tool, which is worse than
+// not having one.
 //
 //   node --experimental-strip-types eval/run-static.ts [--verbose]
 
@@ -26,8 +26,9 @@ const corpus = JSON.parse(
 
 const verbose = process.argv.includes("--verbose");
 
-// Criterios que la capa deterministica pretende decidir.
-// outcome_verified salio del set decidible: depende de los tests, que G0 no ve.
+// Criteria the deterministic layer claims to decide.
+// outcome_verified left the decidable set: it hinges on the tests, which G0
+// never sees.
 const DECIDED = ["instruction_concision", "task_name", "novel", "structured_data_schema"];
 
 type Cell = { tp: number; fp: number; tn: number; fn: number };
@@ -38,7 +39,7 @@ const falsePositives: Array<{ id: string; source: string; criterion: string; det
 const falseNegatives: Array<{ id: string; source: string; criterion: string }> = [];
 
 for (const t of corpus.tasks) {
-  // Los fixtures sinteticos traen el slug en metadata; las tb2 el nombre del dir.
+  // Synthetic fixtures carry the slug in metadata; tb2 tasks use the dir name.
   const slug = (t.metadata.slug as string | undefined) ?? t.id;
   const res = runStatic({ prompt: t.prompt_raw, slug });
 
@@ -80,13 +81,13 @@ for (const t of corpus.tasks) {
 
 const pct = (n: number, d: number) => (d === 0 ? "  -  " : `${((100 * n) / d).toFixed(0).padStart(3)}%`);
 
-console.log("\n══════ Capa determinística vs corpus etiquetado ══════\n");
-console.log("criterio                        n   TP  FP  TN  FN   precisión  recall");
+console.log("\n====== Deterministic layer vs labelled corpus ======\n");
+console.log("criterion                       n   TP  FP  TN  FN   precision  recall");
 for (const c of DECIDED) {
   const { tp, fp, tn, fn } = mat[c];
   const n = tp + fp + tn + fn;
   if (n === 0) {
-    console.log(`${c.padEnd(30)}  ${String(n).padStart(2)}    sin etiquetas`);
+    console.log(`${c.padEnd(30)}  ${String(n).padStart(2)}    no labels`);
     continue;
   }
   console.log(
@@ -96,7 +97,7 @@ for (const c of DECIDED) {
 
 const pos = corpus.tasks.filter((t) => t.source === "tb4-positive");
 let gateFp = 0;
-console.log(`\n── Gate: falsos positivos sobre los ${pos.length} positivos TB4 ──`);
+console.log(`\n-- Gate: false positives on the ${pos.length} TB4 positives --`);
 for (const t of pos) {
   const res = runStatic({ prompt: t.prompt_raw, slug: (t.metadata.slug as string) ?? t.id });
   const b = res.findings.filter((f) => f.severity === "blocker");
@@ -107,15 +108,15 @@ for (const t of pos) {
 }
 
 if (falsePositives.length) {
-  console.log("\n── Falsos positivos (predijo FAIL, la etiqueta dice pass) ──");
+  console.log("\n-- False positives (predicted FAIL, the label says pass) --");
   for (const f of falsePositives) console.log(`  ${f.id} [${f.source}] ${f.criterion}: ${f.detail}`);
 }
 if (falseNegatives.length) {
-  console.log("\n── Falsos negativos (la etiqueta dice fail, no lo vio) ──");
+  console.log("\n-- False negatives (the label says fail, the layer missed it) --");
   for (const f of falseNegatives) console.log(`  ${f.id} [${f.source}] ${f.criterion}`);
 }
 
 console.log(
-  `\nGATE FASE 1: ${gateFp === 0 ? "PASA" : "FALLA"} — ${gateFp} blockers sobre positivos (requerido 0)`,
+  `\nPHASE 1 GATE: ${gateFp === 0 ? "PASS" : "FAIL"} - ${gateFp} blockers on positives (required 0)`,
 );
 process.exit(gateFp === 0 ? 0 : 1);

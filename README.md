@@ -1,93 +1,97 @@
 # prompt-evaluator-tbench4
 
-Compuerta G0 para tareas de Terminal-Bench 4.0: alguien pega el prompt que
-piensa construir, y la herramienta dice **si conviene empezar**.
+G0 gate for Terminal-Bench 4.0 tasks: someone pastes the prompt they are
+thinking of building, and the tool says **whether it is worth starting**.
 
-No aprueba tareas. El aprobar/rechazar del paquete completo pertenece a la tool
-de empaquetamiento del equipo. Por qué esa división existe, y con qué evidencia
-se tomó, está en **[SPEC.md](SPEC.md)** — ese es el documento a leer, no éste.
+It does not approve tasks. Approving or rejecting the complete package belongs
+to the team's packaging tool. Why that split exists, and on what evidence it
+was drawn, is in **[SPEC.md](SPEC.md)** — that is the document to read, not
+this one.
 
-## Estado
+## Status
 
-| Fase | Qué | Estado |
+| Phase | What | State |
 |---|---|---|
-| 0 | Corpus etiquetado | hecho — 63 tareas |
-| 1 | Capa determinística | hecho — gate en verde |
-| 2 | Sondas (OpenRouter) | pendiente, falta la key |
-| 3 | Derivación del dial | pendiente |
-| 4 | Web UI + deploy | pendiente |
+| 0 | Labelled corpus | done — 63 tasks |
+| 1 | Deterministic layer | done — gate green |
+| 2 | Probes (OpenRouter) | in progress |
+| 3 | Dial derivation | pending |
+| 4 | Web UI + deploy | pending |
 
-## Requisitos
+## Requirements
 
-Node **>= 22.6** (`--experimental-strip-types`). Esta fijado en tres lados:
-`engines.node` de `package.json`, `.nvmrc`, y el runtime de las funciones en
-`vercel.json`. En un Node mas viejo los comandos de abajo fallan con
-`bad option`; ahi corre con `npx tsx <archivo>`, que no toca la instalacion
-global.
+Node **>= 22.6** (`--experimental-strip-types`). Pinned in three places:
+`engines.node` in `package.json`, `.nvmrc`, and the function runtime in
+`vercel.json`. On an older Node the commands below fail with `bad option`; use
+`npx tsx <file>` there, which leaves the global install alone.
 
-## El CLI
+## The CLI
 
-Lo que el equipo puede usar hoy: la capa deterministica sobre un
-`instruction.md`, sin key y sin red.
+What the team can use today: the deterministic layer over an `instruction.md`,
+with no key and no network.
 
 ```bash
-npm run g0 -- path/a/la-tarea            # directorio: toma el slug y el timeout
-npm run g0 -- path/a/instruction.md
-cat prompt.md | npm run g0 -- -          # por stdin
-npm run g0 -- path/a/la-tarea --cites    # con la cita de la rubrica
-npm run g0 -- path/a/instruction.md --json
+npm run g0 -- path/to/the-task            # directory: picks up slug and timeout
+npm run g0 -- path/to/instruction.md
+cat prompt.md | npm run g0 -- -           # via stdin
+npm run g0 -- path/to/the-task --cites    # with the rubric citation
+npm run g0 -- path/to/instruction.md --json
 ```
 
-Apuntado a un **directorio** de tarea saca dos cosas mas del contexto: el
-nombre del directorio como slug (habilita `task_name`) y `[agent].timeout_sec`
-del `task.toml` de al lado (habilita el check exacto del trailer).
+Pointed at a task **directory** it pulls two more things from context: the
+directory name as the slug (enables `task_name`) and `[agent].timeout_sec` from
+the `task.toml` alongside it (enables the exact trailer check).
 
-Sale **0** si no hay blockers y **1** si hay alguno, asi que sirve en un hook o
-en CI. No emite `EMPEZAR`: eso necesita las sondas, y un verde de Capa 1 no es
-luz verde (SPEC 1 y 5).
+It exits **0** when there are no blockers and **1** when there is at least one,
+so it works in a hook or in CI. It never emits `START`: that needs the probes,
+and a green from Layer 1 is not a green light (SPEC sections 1 and 5).
 
-## Correr lo que hay
+## Running what exists
 
 ```bash
-python3 corpus/build_corpus.py                       # reconstruye corpus.json
-node --experimental-strip-types eval/run-static.ts   # mide contra el corpus
+python3 corpus/build_corpus.py                       # rebuilds corpus.json
+node --experimental-strip-types eval/run-static.ts   # measures against the corpus
 node --experimental-strip-types eval/run-static.ts --verbose
-npm test                                             # regresiones del CLI
+npm test                                             # CLI regressions
 ```
 
-Resultados de Fase 1 en `eval/results/`, y comentados en SPEC.md 7.
+Phase 1 results live in `eval/results/`, and are discussed in SPEC.md section 7.
 
-## Estructura
+## Layout
 
 ```
-cli/g0.ts                  el CLI: capa deterministica desde la terminal
-corpus/build_corpus.py     arma el set etiquetado desde tres fuentes
-corpus/corpus.json         63 tareas con etiquetas de rúbrica
-src/lib/checks/types.ts    el contrato de salida (Finding, Severity, Verdict)
-src/lib/checks/static.ts   la capa determinística
-eval/run-static.ts         harness de medición + gate
-SPEC.md                    cómo evalúa y por qué
+cli/g0.ts                  the CLI: deterministic layer from the terminal
+corpus/build_corpus.py     assembles the labelled set from three sources
+corpus/corpus.json         63 tasks with rubric labels
+src/lib/checks/types.ts    the output contract (Finding, Severity, Verdict)
+src/lib/checks/static.ts   the deterministic layer
+eval/run-static.ts         measurement harness + gate
+SPEC.md                    how it evaluates, and why
 ```
 
-## Reconstruir el corpus desde cero
+## Rebuilding the corpus from scratch
 
-`corpus/build_corpus.py` lee dos árboles externos:
+`corpus/build_corpus.py` reads two external trees:
 
-- el starter pack TB4 (`PACK`), del que salen los 34 fixtures y los 2 positivos;
-- el repo `laude-institute/terminal-bench` (`TB2REF`), del que salen los cuerpos
-  de las 27 tareas tb2 etiquetadas.
+- the TB4 starter pack (`PACK`), which supplies the 34 fixtures and the 2
+  positives;
+- the `laude-institute/terminal-bench` repo (`TB2REF`), which supplies the
+  bodies of the 27 labelled tb2 tasks.
 
-Las rutas están al tope del script. Para el segundo alcanza un clone sin blobs:
+Both paths are hardcoded at the top of the script and point at the machine it
+was first written on, so set them before running. For the second, a blobless
+clone is enough:
 
 ```bash
 git clone --filter=blob:none --no-checkout --depth 1 \
   https://github.com/laude-institute/terminal-bench.git tb2ref
 ```
 
-y un sparse-checkout de `original-tasks/<nombre>/task.yaml` para las 27.
+plus a sparse-checkout of `original-tasks/<name>/task.yaml` for the 27.
 
-## Secretos
+## Secrets
 
-La key de OpenRouter va en env var del servidor y se lee sólo desde rutas de
-API. Nunca llega al browser, nunca entra al repo, nunca aparece en un log.
-Este proyecto tiene su propia key: no reutilizar la de otro proyecto.
+The OpenRouter key lives in a server-side env var and is read only from API
+routes. It never reaches the browser, never enters the repo, never appears in
+a log. Locally it goes in `.env.local`, which `.gitignore` already covers. This
+project has its own key: do not reuse another project's.

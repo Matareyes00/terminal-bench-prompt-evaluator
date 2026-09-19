@@ -1,21 +1,21 @@
 #!/usr/bin/env node
-// G0 — capa determinística sobre un instruction.md, desde la terminal.
+// G0 - the deterministic layer over an instruction.md, from the terminal.
 //
-// Sin API, sin key, sin red. Es la Capa 1 del SPEC y nada más: NO emite
-// EMPEZAR. Ese veredicto necesita las sondas (§4), y un verde acá sería
-// exactamente el falso verde que el §1 dice que es peor que no tener
-// herramienta.
+// No API, no key, no network. This is Layer 1 of the SPEC and nothing more: it
+// does NOT emit START. That verdict needs the probes (section 4), and a green
+// here would be exactly the false green that section 1 calls worse than having
+// no tool at all.
 //
-//   g0 <ruta>              instruction.md, o el directorio que lo contiene
-//   g0 -                   lee el prompt de stdin
+//   g0 <path>              instruction.md, or the directory containing it
+//   g0 -                   read the prompt from stdin
 //
-//   --slug <s>        slug propuesto; habilita el check de task_name
-//   --timeout <n>     [agent].timeout_sec; habilita el check exacto del trailer
-//   --workdir <d>     WORKDIR del entorno (default /app)
-//   --cites           muestra la cita de la rúbrica de cada hallazgo
-//   --json            salida cruda para scripts
+//   --slug <s>        proposed slug; enables the task_name check
+//   --timeout <n>     [agent].timeout_sec; enables the exact trailer check
+//   --workdir <d>     the environment's WORKDIR (default /app)
+//   --cites           show the rubric sentence behind each finding
+//   --json            raw output for scripts
 //
-// Salida: 0 si no hay blockers, 1 si hay alguno.
+// Exit: 0 if there are no blockers, 1 if there is at least one.
 
 import { readFileSync, existsSync, statSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
@@ -24,7 +24,7 @@ import { runStatic } from "../src/lib/checks/static.ts";
 import type { Finding, Severity } from "../src/lib/checks/types.ts";
 
 // ---------------------------------------------------------------------------
-// presentación
+// presentation
 
 const TTY = process.stdout.isTTY === true && !process.env.NO_COLOR;
 const c = (code: string) => (s: string) => (TTY ? `\x1b[${code}m${s}\x1b[0m` : s);
@@ -37,21 +37,21 @@ const green = c("32");
 
 const SEV: Record<Severity, { label: string; paint: (s: string) => string; blurb: string }> = {
   blocker: {
-    label: "BLOQUEA",
+    label: "BLOCKS",
     paint: red,
-    blurb: "La review lo va a marcar. Arreglalo antes de construir.",
+    blurb: "The review will flag this. Fix it before building.",
   },
   warn: {
-    label: "RIESGO",
+    label: "RISK",
     paint: yellow,
-    blurb: "Riesgo real que depende de contexto que G0 no ve. Decidís vos.",
+    blurb: "A real risk that depends on context G0 cannot see. Your call.",
   },
   todo: {
-    label: "PENDIENTE",
+    label: "PENDING",
     paint: blue,
-    blurb: "Mecánico, de la etapa de empaquetado. No bloquea el borrador.",
+    blurb: "Mechanical, from the packaging stage. Does not block a draft.",
   },
-  info: { label: "DATO", paint: dim, blurb: "Señal sin veredicto." },
+  info: { label: "NOTE", paint: dim, blurb: "A signal with no verdict." },
 };
 
 const ORDER: Severity[] = ["blocker", "warn", "todo", "info"];
@@ -62,22 +62,22 @@ function render(findings: Finding[], showCites: boolean): void {
     if (!group.length) continue;
 
     const { label, paint, blurb } = SEV[sev];
-    console.log(`\n${paint(bold(label))} ${dim("— " + blurb)}\n`);
+    console.log(`\n${paint(bold(label))} ${dim("- " + blurb)}\n`);
 
     for (const f of group) {
-      const where = f.line ? dim(` (línea ${f.line})`) : "";
-      console.log(`  ${paint("•")} ${f.message}${where}`);
-      if (f.excerpt) console.log(`    ${dim("en:")} ${JSON.stringify(f.excerpt)}`);
-      if (f.fix) console.log(`    ${green("→")} ${f.fix}`);
-      if (showCites) console.log(`    ${dim("rúbrica: " + f.rule)}`);
-      console.log(`    ${dim(`[${f.criterion} · ${f.check}]`)}`);
+      const where = f.line ? dim(` (line ${f.line})`) : "";
+      console.log(`  ${paint("*")} ${f.message}${where}`);
+      if (f.excerpt) console.log(`    ${dim("at:")} ${JSON.stringify(f.excerpt)}`);
+      if (f.fix) console.log(`    ${green("->")} ${f.fix}`);
+      if (showCites) console.log(`    ${dim("rubric: " + f.rule)}`);
+      console.log(`    ${dim(`[${f.criterion} / ${f.check}]`)}`);
       console.log();
     }
   }
 }
 
 // ---------------------------------------------------------------------------
-// entrada
+// input
 
 interface Args {
   path?: string;
@@ -105,28 +105,28 @@ function parseArgs(argv: string[]): Args {
 }
 
 const USAGE = `
-G0 — chequeo determinístico de un prompt de Terminal-Bench 4.0
+G0 - deterministic check of a Terminal-Bench 4.0 prompt
 
-  g0 <instruction.md | directorio>
+  g0 <instruction.md | directory>
   cat prompt.md | g0 -
 
-  --slug <s>       slug propuesto (si das un directorio, se toma su nombre)
-  --timeout <n>    [agent].timeout_sec (si hay task.toml al lado, se lee solo)
-  --workdir <d>    WORKDIR del entorno (default /app)
-  --cites          muestra la cita textual de la rúbrica en cada hallazgo
-  --json           salida cruda
+  --slug <s>       proposed slug (given a directory, its name is used)
+  --timeout <n>    [agent].timeout_sec (read from task.toml if one sits alongside)
+  --workdir <d>    the environment's WORKDIR (default /app)
+  --cites          show the verbatim rubric sentence on each finding
+  --json           raw output
 
-Sale 0 si no hay blockers, 1 si hay alguno.
+Exits 0 if there are no blockers, 1 if there is at least one.
 `;
 
 /**
- * [agent].timeout_sec de un task.toml.
+ * [agent].timeout_sec from a task.toml.
  *
- * Tiene que ser consciente de la seccion: un task.toml real trae varios
- * `timeout_sec` —[verifier] y [verifier.environment] vienen ANTES que [agent]—
- * y agarrar el primero hace que el check del trailer compare contra el numero
- * equivocado. Eso produjo un blocker falso sobre runner-failure-visibility,
- * que es uno de los positivos del corpus.
+ * This has to be section-aware: a real task.toml carries several `timeout_sec`
+ * keys - [verifier] and [verifier.environment] both come BEFORE [agent] - and
+ * grabbing the first one makes the trailer check compare against the wrong
+ * number. That produced a false blocker on runner-failure-visibility, which is
+ * one of the corpus positives.
  */
 export function agentTimeout(toml: string): number | undefined {
   let inAgent = false;
@@ -143,24 +143,24 @@ export function agentTimeout(toml: string): number | undefined {
   return undefined;
 }
 
-/** Resuelve la entrada: archivo, directorio de tarea, o stdin. */
+/** Resolves the input: a file, a task directory, or stdin. */
 function load(p: string | undefined): { prompt: string; slug?: string; timeout?: number } {
   if (!p || p === "-") {
     return { prompt: readFileSync(0, "utf8") };
   }
   const abs = resolve(p);
   if (!existsSync(abs)) {
-    console.error(`No existe: ${abs}`);
+    console.error(`No such path: ${abs}`);
     process.exit(2);
   }
 
-  // Un directorio de tarea trae más contexto que el prompt suelto: el nombre
-  // del directorio ES el slug por convención de TB, y el task.toml de al lado
-  // tiene el timeout. Aprovecharlos habilita dos checks que si no quedan mudos.
+  // A task directory carries more context than a bare prompt: the directory
+  // name IS the slug by TB convention, and the task.toml alongside it has the
+  // timeout. Using both enables two checks that would otherwise stay mute.
   if (statSync(abs).isDirectory()) {
     const md = join(abs, "instruction.md");
     if (!existsSync(md)) {
-      console.error(`No hay instruction.md en ${abs}`);
+      console.error(`No instruction.md in ${abs}`);
       process.exit(2);
     }
     const toml = join(abs, "task.toml");
@@ -184,7 +184,7 @@ function main(): void {
   const src = load(args.path);
   const prompt = src.prompt;
   if (!prompt.trim()) {
-    console.error("El prompt está vacío.");
+    console.error("The prompt is empty.");
     process.exit(2);
   }
 
@@ -204,40 +204,40 @@ function main(): void {
   const n = (s: Severity) => res.findings.filter((f) => f.severity === s).length;
   const blockers = n("blocker");
 
-  console.log(bold(`\nG0 · capa determinística`));
+  console.log(bold(`\nG0 / deterministic layer`));
   console.log(
     dim(
       `${args.path && args.path !== "-" ? args.path : "stdin"}` +
-        `${slug ? ` · slug '${slug}'` : ""} · ${res.signals.words} palabras`,
+        `${slug ? ` / slug '${slug}'` : ""} / ${res.signals.words} words`,
     ),
   );
 
   if (!res.findings.length) {
-    console.log(green("\nSin hallazgos en la capa determinística."));
+    console.log(green("\nNo findings in the deterministic layer."));
   } else {
     render(res.findings, args.cites);
   }
 
   console.log(
-    `${bold("Resumen:")} ${blockers} bloquean · ${n("warn")} riesgos · ${n("todo")} pendientes de empaquetado`,
+    `${bold("Summary:")} ${blockers} blocking / ${n("warn")} risks / ${n("todo")} pending packaging`,
   );
 
-  // Lo que esta capa NO decide. Sin esto, un "sin hallazgos" se lee como
-  // permiso para construir, y ese es el falso verde del SPEC §1.
+  // What this layer does NOT decide. Without this, "no findings" reads as
+  // permission to build, and that is the false green of SPEC section 1.
   console.log(
     dim(
-      "\nEsto es la Capa 1: lo que un regex puede probar. No dice si conviene\n" +
-        "empezar — dificultad, novedad y derivabilidad se deciden en las sondas,\n" +
-        "que todavía no están. Un cero acá no es luz verde.",
+      "\nThis is Layer 1: what a regex can prove. It does not say whether to\n" +
+        "start - difficulty, novelty and derivability are decided by the probes,\n" +
+        "which do not exist yet. A zero here is not a green light.",
     ),
   );
-  if (!args.cites) console.log(dim("Con --cites ves la oración de la rúbrica detrás de cada hallazgo."));
+  if (!args.cites) console.log(dim("Use --cites to see the rubric sentence behind each finding."));
 
   process.exit(blockers > 0 ? 1 : 0);
 }
 
-// Solo corre si lo invocaron directo. Sin esto, importar el modulo —un test,
-// o la futura ruta de API— dispara main() y se queda colgado leyendo stdin.
+// Only runs when invoked directly. Without this, importing the module - a
+// test, or the future API route - fires main() and hangs reading stdin.
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   main();
 }

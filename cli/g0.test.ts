@@ -1,10 +1,10 @@
-// Regresion del parseo de task.toml.
+// Regression tests for task.toml parsing.
 //
-// Existe por un bug concreto: leer el primer `timeout_sec` del archivo agarra
-// el de [verifier] (900) en vez del de [agent] (28800), y el check del trailer
-// emite un blocker falso sobre runner-failure-visibility, que es uno de los
-// dos positivos del corpus. Un falso positivo sobre un positivo es la falla
-// que este proyecto existe para evitar, asi que queda cubierta.
+// These exist because of a concrete bug: reading the first `timeout_sec` in
+// the file grabs [verifier]'s (900) instead of [agent]'s (28800), and the
+// trailer check then emits a false blocker on runner-failure-visibility, one
+// of the two corpus positives. A false positive on a positive is the failure
+// this project exists to prevent, so it stays covered.
 //
 //   npx tsx --test cli/g0.test.ts
 
@@ -29,21 +29,21 @@ timeout_sec = 28800.0
 build_timeout_sec = 3600.0
 `;
 
-test("toma [agent].timeout_sec, no el primer timeout_sec del archivo", () => {
+test("takes [agent].timeout_sec, not the first timeout_sec in the file", () => {
   assert.equal(agentTimeout(REAL), 28800);
 });
 
-test("acepta enteros y decimales", () => {
+test("accepts integers and decimals", () => {
   assert.equal(agentTimeout("[agent]\ntimeout_sec = 600"), 600);
   assert.equal(agentTimeout("[agent]\ntimeout_sec = 600.5"), 600.5);
 });
 
-test("sin seccion [agent] no inventa un valor", () => {
+test("invents no value when there is no [agent] section", () => {
   assert.equal(agentTimeout("[verifier]\ntimeout_sec = 900.0"), undefined);
   assert.equal(agentTimeout(""), undefined);
 });
 
-test("no se lleva el timeout_sec de [verifier.environment]", () => {
+test("does not pick up [verifier.environment]'s timeout_sec", () => {
   assert.equal(
     agentTimeout("[agent]\ntimeout_sec = 100\n\n[verifier.environment]\ntimeout_sec = 999"),
     100,
